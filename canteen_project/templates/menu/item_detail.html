@@ -1,0 +1,300 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container" style="padding: 2rem 1rem;">
+    <!-- Breadcrumb -->
+    <nav style="margin-bottom: 1.5rem;">
+        <a href="{% url 'menu' %}" class="btn btn-outline btn-sm">← Back to Menu</a>
+    </nav>
+
+    <!-- Item Details Card -->
+    <div class="card" style="overflow: hidden;">
+        <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 2rem;">
+            <!-- Image Section -->
+            <!-- Image Section -->
+            <div class="item-image-container">
+                {% if item.image %}
+                <img src="{{ item.image.url }}" alt="{{ item.name }}" class="item-image-full">
+                {% else %}
+                <div class="item-image-placeholder">
+                    <span>🍽️</span>
+                </div>
+                {% endif %}
+
+                <div class="item-badges-top">
+                    {% if item.is_todays_special %}
+                    <span class="badge special">⭐ Special</span>
+                    {% endif %}
+
+                    {% if item.is_vegetarian %}
+                    <span class="badge veg">🌱 Veg</span>
+                    {% else %}
+                    <span class="badge nonveg">🍗 Non-Veg</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <style>
+                .item-image-container {
+                    position: relative;
+                    width: 100%;
+                    height: 400px;
+                    border-radius: 24px;
+                    overflow: hidden;
+                    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15);
+                    background: var(--gray-100);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                }
+
+                .item-image-full {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                    transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+                }
+
+                .item-image-container:hover .item-image-full {
+                    transform: scale(1.05);
+                }
+
+                .item-image-placeholder {
+                    width: 100%;
+                    height: 100%;
+                    background: linear-gradient(135deg, var(--gray-100), var(--gray-200));
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 5rem;
+                    color: var(--gray-300);
+                    animation: pulse-placeholder 2s infinite;
+                }
+
+                @keyframes pulse-placeholder {
+                    0% {
+                        opacity: 0.8;
+                    }
+
+                    50% {
+                        opacity: 1;
+                    }
+
+                    100% {
+                        opacity: 0.8;
+                    }
+                }
+
+                .item-badges-top {
+                    position: absolute;
+                    top: 1.5rem;
+                    left: 1.5rem;
+                    right: 1.5rem;
+                    display: flex;
+                    justify-content: space-between;
+                    pointer-events: none;
+                }
+
+                .badge {
+                    padding: 0.6rem 1.2rem;
+                    border-radius: 50px;
+                    font-size: 0.85rem;
+                    font-weight: 700;
+                    letter-spacing: 0.5px;
+                    backdrop-filter: blur(12px);
+                    -webkit-backdrop-filter: blur(12px);
+                    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+                    text-transform: uppercase;
+                }
+
+                .badge.special {
+                    background: rgba(255, 215, 0, 0.9);
+                    color: #000;
+                    border: 1px solid rgba(255, 255, 255, 0.3);
+                }
+
+                .badge.veg {
+                    background: rgba(34, 197, 94, 0.9);
+                    color: white;
+                    margin-left: auto;
+                    /* Push to right */
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                }
+
+                .badge.nonveg {
+                    background: rgba(239, 68, 68, 0.9);
+                    color: white;
+                    margin-left: auto;
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                }
+            </style>
+
+            <!-- Details Section -->
+            <div style="padding: 2rem;">
+                <h1 style="font-size: 2rem; margin-bottom: 0.5rem;">{{ item.name }}</h1>
+
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                    <!-- Rating Display -->
+                    <div style="display: flex; align-items: center; gap: 0.3rem;">
+                        {% if item.average_rating > 0 %}
+                        <span style="color: var(--warning); font-size: 1.2rem;">★</span>
+                        <strong>{{ item.average_rating }}</strong>
+                        <span style="color: #888;">({{ item.review_count }} reviews)</span>
+                        {% else %}
+                        <span style="color: #888;">No reviews yet</span>
+                        {% endif %}
+                    </div>
+
+                    <span style="color: #888;">|</span>
+                    <span style="color: #888;">⏱️ {{ item.preparation_time }} mins</span>
+                </div>
+
+                <p style="color: #666; font-size: 1rem; line-height: 1.6; margin-bottom: 1.5rem;">
+                    {{ item.description|default:"A delicious item prepared with fresh ingredients." }}
+                </p>
+
+                <div id="total-price" data-unit-price="{{ item.price }}"
+                    style="font-size: 2rem; color: var(--primary); font-weight: 700; margin-bottom: 1.5rem;">
+                    ₹{{ item.price }}
+                </div>
+
+                <!-- Add to Cart Form -->
+                <form action="{% url 'add_to_cart' item.id %}" method="post"
+                    style="display: flex; gap: 1rem; align-items: center;">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{% url 'item_detail' item.id %}">
+                    <div class="quantity-selector">
+                        <button type="button" onclick="updateQty(-1)" class="qty-btn"
+                            aria-label="Decrease quantity">−</button>
+                        <input type="number" name="quantity" id="qty" value="1" min="1" max="10" readonly>
+                        <button type="button" onclick="updateQty(1)" class="qty-btn"
+                            aria-label="Increase quantity">+</button>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                        🛒 Add to Cart
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reviews Section -->
+    <div style="margin-top: 3rem;">
+        <h2 style="margin-bottom: 1.5rem;">Customer Reviews</h2>
+
+        <!-- Add/Edit Review Form -->
+        <div class="card" style="margin-bottom: 2rem; padding: 1.5rem;">
+            <h4 style="margin-bottom: 1rem;">
+                {% if user_review %}Edit Your Review{% else %}Write a Review{% endif %}
+            </h4>
+            <form action="{% url 'add_review' item.id %}" method="post">
+                {% csrf_token %}
+
+                <!-- Star Rating -->
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem;">Your Rating</label>
+                    <div class="star-rating" id="starRating">
+                        {% for i in "12345" %}
+                        <span
+                            class="star {% if user_review and user_review.rating >= forloop.counter %}active{% endif %}"
+                            data-rating="{{ forloop.counter }}" onclick="setRating({{ forloop.counter }})"
+                            style="font-size: 2rem; cursor: pointer; color: {% if user_review and user_review.rating >= forloop.counter %}var(--warning){% else %}#ddd{% endif %};">
+                            ★
+                        </span>
+                        {% endfor %}
+                    </div>
+                    <input type="hidden" name="rating" id="ratingInput" value="{{ user_review.rating|default:5 }}">
+                </div>
+
+                <!-- Comment -->
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem;">Your Comment (optional)</label>
+                    <textarea name="comment" rows="3"
+                        style="width: 100%; padding: 0.8rem; border: 1px solid var(--gray-200); border-radius: 8px; resize: vertical;"
+                        placeholder="Share your experience...">{{ user_review.comment|default:"" }}</textarea>
+                </div>
+
+                <div style="display: flex; gap: 1rem;">
+                    <button type="submit" class="btn btn-primary">
+                        {% if user_review %}Update Review{% else %}Submit Review{% endif %}
+                    </button>
+                    {% if user_review %}
+                    <a href="{% url 'delete_review' item.id %}" class="btn btn-outline"
+                        onclick="return confirm('Delete your review?')">Delete</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+
+        <!-- Reviews List -->
+        {% if reviews %}
+        <div style="display: grid; gap: 1rem;">
+            {% for review in reviews %}
+            <div class="card" style="padding: 1.2rem;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            <strong>{{ review.user.username }}</strong>
+                            <span style="color: var(--warning);">
+                                {% for i in "12345" %}
+                                {% if forloop.counter <= review.rating %}★{% else %}☆{% endif %} {% endfor %} </span>
+                        </div>
+                        {% if review.comment %}
+                        <p style="color: #555; margin: 0;">{{ review.comment }}</p>
+                        {% endif %}
+
+                        {% if review.admin_response %}
+                        <div
+                            style="margin-top: 1rem; padding: 0.8rem; background: #f0f7ff; border-left: 3px solid #3b82f6; border-radius: 4px;">
+                            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                                <span
+                                    style="font-size: 10px; font-weight: 800; text-transform: uppercase; background: #3b82f6; color: white; padding: 2px 6px; border-radius: 4px;">Admin
+                                    Reply</span>
+                                <span style="font-size: 12px; font-weight: 600; color: #1e40af;">Canteen Staff</span>
+                            </div>
+                            <p style="color: #1e3a8a; margin: 0; font-size: 0.95rem;">{{ review.admin_response }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <span style="color: #888; font-size: 0.85rem;">
+                        {{ review.created_at|date:"M d, Y" }}
+                    </span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="card" style="text-align: center; padding: 3rem; color: #888;">
+            <p>No reviews yet. Be the first to review!</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    function updateQty(change) {
+        const qtyInput = document.getElementById('qty');
+        const priceDisplay = document.getElementById('total-price');
+        const unitPrice = parseFloat(priceDisplay.dataset.unitPrice);
+        let newQty = parseInt(qtyInput.value) + change;
+
+        if (newQty >= 1 && newQty <= 10) {
+            qtyInput.value = newQty;
+            const totalPrice = (unitPrice * newQty).toFixed(2);
+            priceDisplay.textContent = '₹' + totalPrice;
+        }
+    }
+
+    function setRating(rating) {
+        document.getElementById('ratingInput').value = rating;
+        var stars = document.querySelectorAll('#starRating .star');
+        stars.forEach(function (star, index) {
+            if (index < rating) {
+                star.style.color = 'var(--warning)';
+                star.classList.add('active');
+            } else {
+                star.style.color = '#ddd';
+                star.classList.remove('active');
+            }
+        });
+    }
+</script>
+{% endblock %}

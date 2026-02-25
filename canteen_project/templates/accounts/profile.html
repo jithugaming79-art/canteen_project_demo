@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile - CampusBites{% endblock %}
+
+{% block content %}
+<div class="auth-body">
+    <div class="auth-container" style="max-width: 800px;">
+        <!-- Visual Side (Left) -->
+        <div class="auth-visual">
+            <div class="quote-container animate-enter delay-2">
+                <div class="quote-text">Your<br>account.</div>
+                <div class="quote-sub">Manage your CampusBites profile.</div>
+            </div>
+        </div>
+
+        <!-- Content Side (Right) -->
+        <div class="auth-content">
+            <a href="{% url 'home' %}" class="brand-title">🍔 CampusBites</a>
+
+            <div class="animate-enter delay-1">
+                <h2 class="page-title">My Profile</h2>
+                <p class="page-subtitle">Manage your account details.</p>
+            </div>
+
+            <!-- Avatar -->
+            <div class="animate-enter delay-1" style="text-align: center; margin-bottom: 24px;">
+                <div
+                    style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #fc8019, #ff6b35); display: flex; align-items: center; justify-content: center; margin: 0 auto; font-size: 32px; font-weight: 700; color: #fff; text-transform: uppercase;">
+                    {{ profile.full_name|default:user.username|truncatechars:1 }}
+                </div>
+                <p style="margin-top: 8px; font-weight: 600; color: #111827;">{{ user.username }}</p>
+                <p style="font-size: 13px; color: #6b7280;">{{ profile.get_role_display }}</p>
+            </div>
+
+            <!-- Stats -->
+            <div class="animate-enter delay-2"
+                style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 28px;">
+                <div style="background: #f9fafb; border-radius: 12px; padding: 16px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: 700; color: #fc8019;">{{ order_count }}</div>
+                    <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Total Orders</div>
+                </div>
+                <div style="background: #f9fafb; border-radius: 12px; padding: 16px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: 700; color: #10b981;">₹{{ total_spent }}</div>
+                    <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Total Spent</div>
+                </div>
+            </div>
+
+            <!-- Edit Form -->
+            <form method="POST" class="animate-enter delay-2">
+                {% csrf_token %}
+
+                <div class="form-group-modern">
+                    <label class="modern-label">Full Name</label>
+                    <input type="text" name="full_name" class="modern-input" maxlength="100"
+                        value="{{ profile.full_name }}">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group-modern">
+                        <label class="modern-label">Email</label>
+                        <input type="email" class="modern-input" value="{{ user.email }}" disabled
+                            style="background: #f3f4f6; color: #6b7280; cursor: not-allowed;">
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="modern-label">Phone</label>
+                        <input type="tel" name="phone" class="modern-input" maxlength="10" value="{{ profile.phone }}"
+                            placeholder="10-digit mobile" oninput="this.value = this.value.replace(/[^0-9]/g, '');">
+                    </div>
+                </div>
+
+                {% if profile.college_id %}
+                <div class="form-group-modern">
+                    <label class="modern-label">
+                        {% if profile.role == 'student' %}Registration Number{% else %}Staff / Faculty ID{% endif %}
+                    </label>
+                    <input type="text" class="modern-input" value="{{ profile.college_id }}" disabled
+                        style="background: #f3f4f6; color: #6b7280; cursor: not-allowed;">
+                </div>
+                {% endif %}
+
+                <button type="submit" class="btn-ultra" style="margin-top: 12px;">Save Changes</button>
+            </form>
+
+            <!-- Quick Links -->
+            <div class="animate-enter delay-3"
+                style="margin-top: 28px; border-top: 1px solid #e5e7eb; padding-top: 20px;">
+                <a href="{% url 'change_password' %}"
+                    style="display: flex; align-items: center; gap: 12px; padding: 12px 0; color: #111827; text-decoration: none; font-weight: 500; border-bottom: 1px solid #f3f4f6;">
+                    <span style="font-size: 18px;">🔑</span> Change Password
+                    <span style="margin-left: auto; color: #9ca3af;">→</span>
+                </a>
+                <a href="{% url 'order_history' %}"
+                    style="display: flex; align-items: center; gap: 12px; padding: 12px 0; color: #111827; text-decoration: none; font-weight: 500; border-bottom: 1px solid #f3f4f6;">
+                    <span style="font-size: 18px;">📦</span> My Orders
+                    <span style="margin-left: auto; color: #9ca3af;">→</span>
+                </a>
+                <a href="{% url 'user_feedback' %}"
+                    style="display: flex; align-items: center; gap: 12px; padding: 12px 0; color: #111827; text-decoration: none; font-weight: 500; border-bottom: 1px solid #f3f4f6;">
+                    <span style="font-size: 18px;">💬</span> Feedback & Support
+                    <span style="margin-left: auto; color: #9ca3af;">→</span>
+                </a>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="animate-enter delay-3" style="margin-top: 24px;">
+                <button type="button" onclick="document.getElementById('deactivateModal').style.display='flex'"
+                    style="background: none; border: 1px solid #fecaca; color: #dc2626; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 500; width: 100%;">
+                    ⚠️ Deactivate Account
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Deactivate Account Modal -->
+<div id="deactivateModal"
+    style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center;">
+    <div
+        style="background: #fff; border-radius: 16px; padding: 32px; max-width: 400px; width: 90%; position: relative;">
+        <h3 style="color: #dc2626; margin-bottom: 12px;">⚠️ Deactivate Account</h3>
+        <p style="color: #6b7280; font-size: 14px; margin-bottom: 20px;">
+            This action will disable your account. You won't be able to log in until an admin reactivates it. Your order
+            history will be preserved.
+        </p>
+        <form method="POST" action="{% url 'deactivate_account' %}">
+            {% csrf_token %}
+            {% if user.has_usable_password %}
+            <div class="form-group-modern">
+                <label class="modern-label">Enter your password</label>
+                <input type="password" name="password" class="modern-input" required>
+            </div>
+            {% endif %}
+            <div class="form-group-modern">
+                <label class="modern-label">Type <strong style="color: #dc2626;">DEACTIVATE</strong> to confirm</label>
+                <input type="text" name="confirm" class="modern-input" required placeholder="DEACTIVATE">
+            </div>
+            <div style="display: flex; gap: 12px; margin-top: 16px;">
+                <button type="button" onclick="document.getElementById('deactivateModal').style.display='none'"
+                    class="btn-ultra" style="background: #f3f4f6; color: #374151; flex: 1;">Cancel</button>
+                <button type="submit" class="btn-ultra" style="background: #dc2626; flex: 1;">Deactivate</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Force Light Mode
+    document.body.classList.remove('dark-mode');
+    document.body.style.background = '#ffffff';
+    document.body.style.color = '#111827';
+    localStorage.setItem('theme', 'light');
+</script>
+{% endblock %}

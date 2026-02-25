@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}My Favorites - College Canteen{% endblock %}
+
+{% block content %}
+<section class="favorites-section">
+    <div class="container" style="padding: 2rem 1rem;">
+        <!-- Page Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h2 class="section-title" style="margin: 0;">❤️ My Favorites</h2>
+            <a href="{% url 'menu' %}" class="btn btn-outline btn-sm">← Back to Menu</a>
+        </div>
+
+        {% if favorites %}
+        <!-- Favorites Grid -->
+        <div class="menu-grid">
+            {% for fav in favorites %}
+            <div class="food-card">
+                <a href="{% url 'item_detail' fav.menu_item.id %}" style="text-decoration: none; color: inherit;">
+                    <div class="food-card-image" style="position: relative;">
+                        {% if fav.menu_item.image %}
+                        <img src="{{ fav.menu_item.image.url }}" alt="{{ fav.menu_item.name }}">
+                        {% else %}
+                        <div
+                            style="width: 100%; height: 200px; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; align-items: center; justify-content: center;">
+                            <span style="font-size: 3rem;">🍽️</span>
+                        </div>
+                        {% endif %}
+
+                        <!-- Remove from favorites button -->
+                        <a href="{% url 'toggle_favorite' fav.menu_item.id %}?next={% url 'favorites' %}"
+                            class="btn btn-sm"
+                            style="position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.9); color: var(--danger); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; z-index: 2;"
+                            title="Remove from favorites">
+                            ❤️
+                        </a>
+
+                        {% if fav.menu_item.is_vegetarian %}
+                        <span
+                            style="position: absolute; bottom: 10px; right: 10px; background: #22c55e; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; z-index: 2;">🌱
+                            Veg</span>
+                        {% endif %}
+                    </div>
+                </a>
+
+                <div class="food-card-body">
+                    <a href="{% url 'item_detail' fav.menu_item.id %}" style="text-decoration: none; color: inherit;">
+                        <h3 class="food-card-title">{{ fav.menu_item.name }}</h3>
+                    </a>
+                    <p class="food-card-category">{{ fav.menu_item.category.name }}</p>
+
+                    <div class="food-card-meta">
+                        <span class="food-rating">
+                            {% if fav.menu_item.average_rating > 0 %}
+                            ★ {{ fav.menu_item.average_rating }}
+                            {% else %}
+                            ★ New
+                            {% endif %}
+                        </span>
+                        <span class="food-time">⏱️ {{ fav.menu_item.preparation_time }} mins</span>
+                    </div>
+
+                    <div class="food-card-footer">
+                        <span class="food-price">₹{{ fav.menu_item.price }}</span>
+
+                        {% if fav.menu_item.is_available %}
+                        <form method="POST" action="{% url 'add_to_cart' fav.menu_item.id %}" style="margin: 0;">
+                            {% csrf_token %}
+                            <input type="hidden" name="quantity" value="1">
+                            <input type="hidden" name="next" value="{% url 'favorites' %}">
+                            <button type="submit" class="add-to-cart-btn">ADD +</button>
+                        </form>
+                        {% else %}
+                        <button class="add-to-cart-btn" disabled style="opacity: 0.5; cursor: not-allowed;">
+                            Unavailable
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <!-- Empty State -->
+        <div class="empty-state" style="text-align: center; padding: 4rem 2rem;">
+            <div class="empty-state-icon" style="font-size: 4rem; margin-bottom: 1rem;">💔</div>
+            <h3>No favorites yet</h3>
+            <p style="color: #888; margin-bottom: 1.5rem;">Start adding items to your favorites to see them here!</p>
+            <a href="{% url 'menu' %}" class="btn btn-primary">Browse Menu</a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

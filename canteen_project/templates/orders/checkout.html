@@ -1,0 +1,385 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout - Canteen{% endblock %}
+
+{% block content %}
+<!-- Order Processing Overlay -->
+<div class="stripe-overlay" id="orderOverlay">
+    <div class="stripe-overlay-card">
+        <div class="stripe-overlay-icon" style="background: rgba(252, 128, 25, 0.1); color: var(--primary);">
+            <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="2" fill="none"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+        </div>
+        <h3 style="margin-bottom: 8px; font-weight: 700; color: var(--dark, #1c1c1c); font-size: 20px;">Processing Order
+        </h3>
+        <p style="margin-bottom: 24px; color: var(--grey, #686b78); font-size: 14px;">Confirming items and securing your
+            order...</p>
+        <div class="stripe-progress-bar">
+            <div class="stripe-progress-fill"></div>
+        </div>
+        <div class="stripe-steps" style="display: flex; gap: 20px; justify-content: center;">
+            <div class="stripe-step active" id="orderStep1"><span class="stripe-step-dot"></span> Validating</div>
+            <div class="stripe-step" id="orderStep2"><span class="stripe-step-dot"></span> Placing Order</div>
+            <div class="stripe-step" id="orderStep3"><span class="stripe-step-dot"></span> Redirecting</div>
+        </div>
+    </div>
+</div>
+
+<section style="padding: 40px 0;">
+    <div class="container">
+        <h2 class="section-title">📝 Checkout</h2>
+
+        <div class="cart-layout">
+            <div class="cart-items">
+                <h3 style="margin-bottom: 20px;">Order Summary</h3>
+                {% for item in cart_items %}
+                <div class="cart-item">
+                    <div class="cart-item-details">
+                        <h4 class="cart-item-name">{{ item.item.name }}</h4>
+                        <p>{{ item.quantity }} × ₹{{ item.item.price }}</p>
+                    </div>
+                    <span style="font-weight:600;">₹{{ item.subtotal }}</span>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="cart-summary">
+                <!-- Estimated Wait Time Banner -->
+                <div
+                    style="background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 2rem;">⏱️</span>
+                    <div>
+                        <strong style="font-size: 1.1rem;">Estimated Wait: ~{{ estimated_wait }} mins</strong>
+                        <p style="margin: 0; font-size: 0.85rem; color: #64748b;">
+                            {% if pending_orders > 0 %}
+                            {{ pending_orders }} order(s) ahead of you
+                            {% else %}
+                            No queue - your order will be prepared immediately!
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+
+                <form method="POST" action="{% url 'place_order' %}" id="checkoutForm"
+                    onsubmit="showOrderOverlay(event, this)">
+                    {% csrf_token %}
+
+                    <!-- Delivery Options -->
+                    <h4 style="margin-bottom: 1rem;">🚚 Delivery Options</h4>
+                    <div class="form-group">
+                        <label>How would you like to receive your order?</label>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem;">
+                            <label
+                                style="display: flex; align-items: center; gap: 0.5rem; padding: 0.8rem; border: 2px solid var(--gray-200); border-radius: 8px; cursor: pointer;"
+                                class="delivery-option">
+                                <input type="radio" name="delivery_type" value="pickup" checked
+                                    onchange="toggleDeliveryFields()">
+                                <span>🏪 <strong>Pickup at Counter</strong> - Free</span>
+                            </label>
+                            <label
+                                style="display: flex; align-items: center; gap: 0.5rem; padding: 0.8rem; border: 2px solid var(--gray-200); border-radius: 8px; cursor: pointer;"
+                                class="delivery-option">
+                                <input type="radio" name="delivery_type" value="classroom"
+                                    onchange="toggleDeliveryFields()">
+                                <span>📚 <strong>Deliver to Classroom</strong> - ₹{{ delivery_fee }}</span>
+                            </label>
+                            <label
+                                style="display: flex; align-items: center; gap: 0.5rem; padding: 0.8rem; border: 2px solid var(--gray-200); border-radius: 8px; cursor: pointer;"
+                                class="delivery-option">
+                                <input type="radio" name="delivery_type" value="staffroom"
+                                    onchange="toggleDeliveryFields()">
+                                <span>👨‍🏫 <strong>Deliver to Staffroom</strong> - ₹{{ delivery_fee }}</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Room Number Input (hidden by default) -->
+                    <div class="form-group" id="roomNumberGroup" style="display: none;">
+                        <label id="roomLabel">Room Number</label>
+                        <input type="text" name="delivery_location" id="roomNumber" class="form-control"
+                            placeholder="e.g., Room 101 or Block A-203" maxlength="50">
+                        <small style="color: #666;">Enter your classroom or staffroom number for delivery</small>
+                    </div>
+
+                    <!-- Preorder Option -->
+                    <h4 style="margin-bottom: 1rem;">🕒 Scheduling</h4>
+                    <div class="form-group">
+                        <label>When do you want your order?</label>
+                        <div style="display: flex; gap: 1rem; margin-top: 0.5rem; flex-wrap: wrap;">
+                            <label
+                                style="flex: 1; min-width: 140px; display: flex; align-items: center; gap: 0.5rem; padding: 0.8rem; border: 2px solid var(--gray-200); border-radius: 8px; cursor: pointer;"
+                                class="scheduling-option">
+                                <input type="radio" name="order_timing" value="now" checked
+                                    onchange="toggleScheduling()">
+                                <span>⚡ <strong>Order for Now</strong></span>
+                            </label>
+                            <label
+                                style="flex: 1; min-width: 140px; display: flex; align-items: center; gap: 0.5rem; padding: 0.8rem; border: 2px solid var(--gray-200); border-radius: 8px; cursor: pointer;"
+                                class="scheduling-option">
+                                <input type="radio" name="order_timing" value="preorder" onchange="toggleScheduling()">
+                                <span>📅 <strong>Preorder for Later</strong></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="preorderTimeGroup" style="display: none;">
+                        <label>Select Date & Time</label>
+                        <input type="datetime-local" name="scheduled_for" id="scheduledFor" class="form-control">
+                        <small style="color: #666;">Please select a time at least 30 minutes from now.</small>
+                    </div>
+
+                    <hr style="margin: 1.5rem 0; border-color: var(--gray-200);">
+
+                    <h4 style="margin-bottom: 1rem;">💳 Payment</h4>
+                    <div class="form-group">
+                        <label>Payment Method</label>
+                        <select name="payment_method" class="form-control">
+                            <option value="online">📱 Online Payment (UPI/Card)</option>
+                            <option value="cash">💵 Cash at Counter</option>
+                            <option value="wallet">👛 Wallet (₹{{ user.profile.wallet_balance }})</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Special Instructions</label>
+                        <textarea name="special_instructions" class="form-control" rows="2"
+                            placeholder="Any special requests..."></textarea>
+                    </div>
+
+                    <!-- Order Summary -->
+                    <div style="background: var(--gray-100); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                        <div class="summary-row"
+                            style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span>Subtotal</span>
+                            <span>₹{{ total }}</span>
+                        </div>
+                        <div class="summary-row" id="deliveryFeeRow"
+                            style="display: none; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span>Delivery Fee</span>
+                            <span id="deliveryFeeAmount">₹{{ delivery_fee|floatformat:0 }}</span>
+                        </div>
+                        <div class="summary-row total"
+                            style="display: flex; justify-content: space-between; font-weight: 700; font-size: 1.2rem; padding-top: 0.5rem; border-top: 1px solid var(--gray-200);">
+                            <span>Total</span>
+                            <span id="grandTotal">₹{{ total }}</span>
+                        </div>
+                    </div>
+
+                    <input type="hidden" name="subtotal" value="{{ total }}">
+
+                    <button type="submit" class="btn btn-primary btn-block btn-lg">
+                        Place Order →
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .delivery-option:has(input:checked),
+    .scheduling-option:has(input:checked) {
+        border-color: var(--primary) !important;
+        background: rgba(255, 107, 53, 0.05);
+    }
+
+    /* Loading Overlay CSS */
+    .stripe-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: var(--background, #121212);
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 28px;
+    }
+
+    .stripe-overlay.active {
+        display: flex;
+    }
+
+    .stripe-overlay-card {
+        background: var(--white);
+        border-radius: 20px;
+        padding: 48px 56px;
+        text-align: center;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        max-width: 400px;
+        width: 90%;
+    }
+
+    .stripe-overlay-icon {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .stripe-progress-bar {
+        width: 100%;
+        height: 4px;
+        background: var(--border, #e9e9eb);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+
+    .stripe-progress-fill {
+        width: 0%;
+        height: 100%;
+        background: linear-gradient(90deg, var(--primary, #fc8019), #ff9a3c);
+        border-radius: 4px;
+        animation: progressAnim 3s ease-in-out forwards;
+    }
+
+    @keyframes progressAnim {
+        0% {
+            width: 0%;
+        }
+
+        40% {
+            width: 60%;
+        }
+
+        70% {
+            width: 80%;
+        }
+
+        100% {
+            width: 95%;
+        }
+    }
+
+    .stripe-step {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: var(--light-grey, #93959f);
+        transition: color 0.4s ease;
+    }
+
+    .stripe-step.active {
+        color: var(--primary, #fc8019);
+        font-weight: 600;
+    }
+
+    .stripe-step.done {
+        color: var(--success, #60b246);
+    }
+
+    .stripe-step-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--border, #e9e9eb);
+        transition: background 0.4s ease;
+    }
+
+    .stripe-step.active .stripe-step-dot {
+        background: var(--primary, #fc8019);
+    }
+
+    .stripe-step.done .stripe-step-dot {
+        background: var(--success, #60b246);
+    }
+</style>
+
+<script>
+    const subtotal = parseFloat("{{ total|default:0 }}");
+    const deliveryFee = parseFloat("{{ delivery_fee|default:0 }}");
+
+    function showOrderOverlay(e, form) {
+        // Native form validation check
+        if (!form.checkValidity()) {
+            return;
+        }
+
+        const overlay = document.getElementById('orderOverlay');
+        if (overlay) {
+            overlay.classList.add('active');
+
+            setTimeout(() => {
+                const step1 = document.getElementById('orderStep1');
+                const step2 = document.getElementById('orderStep2');
+                if (step1) step1.classList.replace('active', 'done');
+                if (step2) step2.classList.add('active');
+            }, 600);
+
+            setTimeout(() => {
+                const step2 = document.getElementById('orderStep2');
+                const step3 = document.getElementById('orderStep3');
+                if (step2) step2.classList.replace('active', 'done');
+                if (step3) step3.classList.add('active');
+            }, 1800);
+        }
+
+        // Prevent double submit
+        const btn = form.querySelector('button[type="submit"]');
+        if (btn) btn.style.pointerEvents = 'none';
+
+        // Let form submit natively to '/orders/place/'
+    }
+
+    // partial function to get current time in ISO format for min attribute
+    function setMinTime() {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() + 30); // At least 30 mins from now
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('scheduledFor').min = now.toISOString().slice(0, 16);
+    }
+    setMinTime();
+
+    function toggleScheduling() {
+        const orderTiming = document.querySelector('input[name="order_timing"]:checked').value;
+        const preorderGroup = document.getElementById('preorderTimeGroup');
+        const scheduledForRaw = document.getElementById('scheduledFor');
+
+        if (orderTiming === 'preorder') {
+            preorderGroup.style.display = 'block';
+            scheduledForRaw.required = true;
+            setMinTime();
+        } else {
+            preorderGroup.style.display = 'none';
+            scheduledForRaw.required = false;
+        }
+    }
+
+    function toggleDeliveryFields() {
+        const deliveryType = document.querySelector('input[name="delivery_type"]:checked').value;
+        const roomGroup = document.getElementById('roomNumberGroup');
+        const roomLabel = document.getElementById('roomLabel');
+        const roomInput = document.getElementById('roomNumber');
+        const deliveryFeeRow = document.getElementById('deliveryFeeRow');
+        const grandTotal = document.getElementById('grandTotal');
+
+        if (deliveryType === 'pickup') {
+            roomGroup.style.display = 'none';
+            roomInput.required = false;
+            deliveryFeeRow.style.display = 'none';
+            grandTotal.textContent = '₹' + subtotal;
+        } else {
+            roomGroup.style.display = 'block';
+            roomInput.required = true;
+            deliveryFeeRow.style.display = 'flex';
+            grandTotal.textContent = '₹' + (subtotal + deliveryFee);
+
+            if (deliveryType === 'classroom') {
+                roomLabel.textContent = 'Classroom Number';
+                roomInput.placeholder = 'e.g., Room 101, Block A-203';
+            } else {
+                roomLabel.textContent = 'Staffroom Number';
+                roomInput.placeholder = 'e.g., Staff Room 1, Admin Block';
+            }
+        }
+    }
+</script>
+{% endblock %}

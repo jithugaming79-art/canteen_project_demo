@@ -1,0 +1,1027 @@
+{% extends 'base.html' %}
+
+{% block title %}Menu - College Canteen{% endblock %}
+
+{% block content %}
+<section class="menu-section">
+    <div class="container">
+        <div class="menu-header"
+            style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+            <h2 class="section-title" style="margin: 0;">🍽️ Our Menu</h2>
+
+            <!-- Search Trigger (Swiggy/Zomato Style - opens overlay) -->
+            <div class="search-trigger" id="searchTrigger" onclick="openSearch()">
+
+                <span class="search-trigger-text">Search for dishes, cuisines...</span>
+                <kbd>/</kbd>
+            </div>
+        </div>
+
+        <!-- Hidden form for full-page search submit -->
+        <form id="searchForm" action="{% url 'menu' %}" method="GET" style="display:none;">
+            {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
+            {% if veg_only %}<input type="hidden" name="veg" value="true">{% endif %}
+            {% if nonveg_only %}<input type="hidden" name="nonveg" value="true">{% endif %}
+            <input type="hidden" name="q" id="searchFormQuery" value="">
+        </form>
+
+        <!-- ===== Search Overlay Modal ===== -->
+        <div class="search-overlay" id="searchOverlay">
+            <div class="search-modal">
+                <!-- Input Area -->
+                <div class="search-input-area">
+
+                    <input type="text" id="searchInput" autocomplete="off" placeholder="Search for dishes, cuisines..."
+                        autofocus>
+                    <button class="search-clear-btn" id="searchClearBtn" title="Clear" style="display:none;"
+                        type="button">✕</button>
+                    <button class="search-close-btn" onclick="closeSearch()" title="Close (Esc)"
+                        type="button">✕</button>
+                </div>
+
+                <!-- Scrollable Body -->
+                <div class="search-body" id="searchBody">
+                    <!-- Default: Trending + Recent (shown when empty) -->
+                    <div id="searchDefault">
+                        <!-- Trending Searches -->
+                        <div class="search-section-header">
+                            <span>🔥 Popular Searches</span>
+                        </div>
+                        <div class="search-chips" id="trendingChips">
+                            <div class="search-chip" onclick="chipSearch('Biryani')"><span class="chip-icon">🍚</span>
+                                Biryani</div>
+                            <div class="search-chip" onclick="chipSearch('Burger')"><span class="chip-icon">🍔</span>
+                                Burger</div>
+                            <div class="search-chip" onclick="chipSearch('Pizza')"><span class="chip-icon">🍕</span>
+                                Pizza</div>
+                            <div class="search-chip" onclick="chipSearch('Coffee')"><span class="chip-icon">☕</span>
+                                Coffee</div>
+                            <div class="search-chip" onclick="chipSearch('Sandwich')"><span class="chip-icon">🥪</span>
+                                Sandwich</div>
+                            <div class="search-chip" onclick="chipSearch('Juice')"><span class="chip-icon">🧃</span>
+                                Juice</div>
+                            <div class="search-chip" onclick="chipSearch('Noodles')"><span class="chip-icon">🍜</span>
+                                Noodles</div>
+                            <div class="search-chip" onclick="chipSearch('Dosa')"><span class="chip-icon">🫓</span> Dosa
+                            </div>
+                        </div>
+
+                        <!-- Recent Searches -->
+                        <div id="recentSection" style="display:none;">
+                            <div class="search-section-header">
+                                <span>🕒 Recent Searches</span>
+                                <button onclick="clearRecentSearches()">Clear All</button>
+                            </div>
+                            <div id="recentList"></div>
+                        </div>
+                    </div>
+
+                    <!-- Loading Skeletons (shown while fetching) -->
+                    <div id="searchLoading" style="display:none;">
+                        <div class="search-skeleton">
+                            <div class="skel-img"></div>
+                            <div class="skel-body">
+                                <div class="skel-line w75"></div>
+                                <div class="skel-line w50"></div>
+                            </div>
+                        </div>
+                        <div class="search-skeleton">
+                            <div class="skel-img"></div>
+                            <div class="skel-body">
+                                <div class="skel-line w75"></div>
+                                <div class="skel-line w50"></div>
+                            </div>
+                        </div>
+                        <div class="search-skeleton">
+                            <div class="skel-img"></div>
+                            <div class="skel-body">
+                                <div class="skel-line w75"></div>
+                                <div class="skel-line w30"></div>
+                            </div>
+                        </div>
+                        <div class="search-skeleton">
+                            <div class="skel-img"></div>
+                            <div class="skel-body">
+                                <div class="skel-line w75"></div>
+                                <div class="skel-line w50"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Live Results -->
+                    <div id="searchResults" style="display:none;"></div>
+
+                    <!-- No Results -->
+                    <div id="searchNoResults" class="search-no-results" style="display:none;">
+                        <div class="no-results-icon">🤷</div>
+                        <h4>No results found</h4>
+                        <p id="noResultsText">Try searching with different keywords</p>
+                    </div>
+
+                    <!-- Error State -->
+                    <div id="searchError" class="search-error-state" style="display:none;">
+                        <div class="search-error-icon">⚠️</div>
+                        <h4>Something went wrong</h4>
+                        <p>Couldn't load results. Check your connection.</p>
+                        <button class="search-retry-btn" id="searchRetryBtn" type="button">Retry</button>
+                    </div>
+                </div>
+
+                <!-- Footer with keyboard hints -->
+
+            </div>
+        </div>
+
+        <!-- Filters Row -->
+        <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap;">
+            <!-- Category Filter Tabs -->
+            <div class="filter-tabs" style="display: flex; gap: 0.5rem; flex-wrap: wrap; flex: 1;">
+                <a href="{% url 'menu' %}?{% if search_query %}q={{ search_query }}&{% endif %}{% if veg_only %}veg=true{% endif %}"
+                    class="filter-tab {% if not selected_category %}active{% endif %}">
+                    All Items
+                </a>
+                {% for cat in categories %}
+                {% if cat.name != 'Non-Veg' %}
+                <a href="{% url 'menu' %}?category={{ cat.id }}{% if search_query %}&q={{ search_query }}{% endif %}{% if veg_only %}&veg=true{% endif %}"
+                    class="filter-tab {% if selected_category == cat.id|stringformat:'s' %}active{% endif %}">
+                    {{ cat.name }}
+                </a>
+                {% endif %}
+                {% endfor %}
+            </div>
+
+            <!-- Unified Segmented Diet Filter -->
+            <div class="diet-segmented-control">
+                <!-- All -->
+                <a href="{% url 'menu' %}?{% if selected_category %}category={{ selected_category }}&{% endif %}{% if search_query %}q={{ search_query }}&{% endif %}"
+                    class="diet-segment {% if not veg_only and not nonveg_only %}active{% endif %}">
+                    All
+                </a>
+
+                <!-- Veg -->
+                <a href="{% url 'menu' %}?{% if selected_category %}category={{ selected_category }}&{% endif %}{% if search_query %}q={{ search_query }}&{% endif %}veg=true"
+                    class="diet-segment veg {% if veg_only %}active{% endif %}">
+                    <span class="veg-icon"></span> Veg
+                </a>
+
+                <!-- Non-Veg -->
+                <a href="{% url 'menu' %}?{% if selected_category %}category={{ selected_category }}&{% endif %}{% if search_query %}q={{ search_query }}&{% endif %}nonveg=true"
+                    class="diet-segment non-veg {% if nonveg_only %}active{% endif %}">
+                    <span class="non-veg-icon"></span> Non-Veg
+                </a>
+            </div>
+
+            <style>
+                .diet-segmented-control {
+                    display: inline-flex;
+                    background: var(--gray-100);
+                    padding: 4px;
+                    border-radius: 50px;
+                    border: 1px solid var(--border);
+                    gap: 2px;
+                }
+
+                .diet-segment {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                    padding: 6px 16px;
+                    border-radius: 50px;
+                    font-size: 13px;
+                    font-weight: 500;
+                    color: var(--grey);
+                    text-decoration: none;
+                    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                    user-select: none;
+                }
+
+                .diet-segment:hover:not(.active) {
+                    background: rgba(0, 0, 0, 0.05);
+                    color: var(--dark-grey);
+                }
+
+                /* Active State (General) */
+                .diet-segment.active {
+                    background: var(--white);
+                    color: var(--dark);
+                    font-weight: 600;
+                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                }
+
+                /* Specific Active Colors */
+                .diet-segment.veg.active {
+                    color: #15803d;
+                    /* Emerald */
+                }
+
+                .diet-segment.non-veg.active {
+                    color: #b91c1c;
+                    /* Red */
+                }
+
+                /* Icons */
+                .veg-icon,
+                .non-veg-icon {
+                    width: 14px;
+                    height: 14px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border: 1px solid currentColor;
+                    border-radius: 2px;
+                    opacity: 0.8;
+                    box-sizing: border-box;
+                    flex-shrink: 0;
+                }
+
+                .diet-segment.active .veg-icon,
+                .diet-segment.active .non-veg-icon {
+                    opacity: 1;
+                    border-width: 1.5px;
+                }
+
+                .veg-icon::after {
+                    content: '';
+                    width: 6px;
+                    height: 6px;
+                    background: currentColor;
+                    border-radius: 50%;
+                }
+
+                .non-veg-icon::after {
+                    content: '';
+                    width: 6px;
+                    height: 6px;
+                    background: currentColor;
+                    clip-path: polygon(0 0, 100% 0, 50% 100%);
+                }
+            </style>
+        </div>
+
+        <!-- Active Filters Display -->
+        {% if search_query or veg_only or nonveg_only %}
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; align-items: center;">
+            <span style="color: #888; font-size: 0.9rem;">Active filters:</span>
+            {% if search_query %}
+            <span
+                style="background: var(--primary-light); color: var(--primary); padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem;">
+                "{{ search_query }}"
+                <a href="{% url 'menu' %}{% if selected_category %}?category={{ selected_category }}{% endif %}{% if veg_only %}{% if selected_category %}&{% else %}?{% endif %}veg=true{% endif %}{% if nonveg_only %}{% if selected_category %}&{% else %}?{% endif %}nonveg=true{% endif %}"
+                    style="color: var(--primary); margin-left: 0.3rem;">×</a>
+            </span>
+            {% endif %}
+            {% if veg_only %}
+            <span
+                style="background: #dcfce7; color: #22c55e; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem;">
+                🌱 Veg Only
+                <a href="{% url 'menu' %}{% if selected_category %}?category={{ selected_category }}{% endif %}{% if search_query %}{% if selected_category %}&{% else %}?{% endif %}q={{ search_query }}{% endif %}"
+                    style="color: #22c55e; margin-left: 0.3rem;">×</a>
+            </span>
+            {% endif %}
+            {% if nonveg_only %}
+            <span
+                style="background: #fecaca; color: #dc2626; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem;">
+                🍗 Non-Veg Only
+                <a href="{% url 'menu' %}{% if selected_category %}?category={{ selected_category }}{% endif %}{% if search_query %}{% if selected_category %}&{% else %}?{% endif %}q={{ search_query }}{% endif %}"
+                    style="color: #dc2626; margin-left: 0.3rem;">×</a>
+            </span>
+            {% endif %}
+            <a href="{% url 'menu' %}" style="color: #888; font-size: 0.85rem; margin-left: 0.5rem;">Clear all</a>
+        </div>
+        {% endif %}
+
+        {% if fuzzy_suggestion %}
+        <div
+            style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 12px 20px; border-radius: 10px; margin-bottom: 1rem; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; color: #92400e; border: 1px solid #f59e0b40;">
+            <span style="font-size: 1.3rem;">🔍</span>
+            <span>{{ fuzzy_suggestion }}</span>
+        </div>
+        {% endif %}
+
+        <!-- Today's Specials Banner -->
+        {% if specials and not selected_category and not search_query %}
+        <div
+            style="background: linear-gradient(135deg, #fff3cd 0%, #ffe082 100%); padding: 20px; border-radius: var(--radius-md); margin-bottom: 30px; display: flex; align-items: center; gap: 15px;">
+            <span style="font-size: 32px;">⭐</span>
+            <div>
+                <strong style="font-size: 16px;">Today's Specials:</strong>
+                <span style="color: var(--grey);">
+                    {% for item in specials %}
+                    {{ item.name }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </span>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Result Count -->
+        {% if search_query or veg_only or nonveg_only or selected_category %}
+        <p style="color: var(--grey); margin-bottom: 15px;">{{ total_results }} item{{ total_results|pluralize }} found
+        </p>
+        {% endif %}
+
+        <!-- Menu Grid -->
+        <div class="menu-grid">
+            {% for item in items %}
+            <div class="food-card" data-item-id="{{ item.id }}">
+                <a href="{% url 'item_detail' item.id %}" style="text-decoration: none; color: inherit;">
+                    <div class="food-card-image">
+                        {% if item.image %}
+                        <img src="{{ item.image.url }}" alt="{{ item.name }}">
+                        {% else %}
+                        <img src="https://via.placeholder.com/300x200?text={{ item.name }}" alt="{{ item.name }}">
+                        {% endif %}
+
+                        {% if item.is_todays_special %}
+                        <span class="food-badge special" style="z-index: 2;">Special ⭐</span>
+                        {% elif item.is_available %}
+                        <span class="food-badge">Available</span>
+                        {% else %}
+                        <span class="food-badge" style="background: var(--danger);">Out of Stock</span>
+                        {% endif %}
+
+                        {% if item.is_vegetarian %}
+                        <span
+                            style="position: absolute; top: 10px; right: 10px; background: #22c55e; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; z-index: 2;">🌱
+                            Veg</span>
+                        {% else %}
+                        <span
+                            style="position: absolute; top: 10px; right: 10px; background: #dc2626; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; z-index: 2;">🍗
+                            Non-Veg</span>
+                        {% endif %}
+
+                        <!-- Favorite Heart Button -->
+                        <button class="fav-heart-btn {% if item.id in user_favorite_ids %}active{% endif %}"
+                            data-item-id="{{ item.id }}"
+                            onclick="event.preventDefault(); event.stopPropagation(); toggleFav(this, {{ item.id }})"
+                            title="Add to favorites">
+                            <svg class="heart-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path
+                                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                            </svg>
+                            <svg class="heart-filled" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path
+                                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                            </svg>
+                        </button>
+                    </div>
+                </a>
+
+                <div class="food-card-body">
+                    <a href="{% url 'item_detail' item.id %}" style="text-decoration: none; color: inherit;">
+                        <h3 class="food-card-title">{{ item.name }}</h3>
+                    </a>
+                    <p class="food-card-category">{{ item.category.name }}</p>
+
+                    {% if item.description %}
+                    <p style="font-size: 12px; color: var(--light-grey); margin-bottom: 10px;">
+                        {{ item.description|truncatechars:50 }}
+                    </p>
+                    {% endif %}
+
+                    <div class="food-card-meta">
+                        <span class="food-rating">
+                            {% if item.average_rating > 0 %}
+                            ★ {{ item.average_rating }} ({{ item.review_count }})
+                            {% else %}
+                            ★ New
+                            {% endif %}
+                        </span>
+                        <span class="food-time">⏱️ {{ item.preparation_time }} mins</span>
+                    </div>
+
+                    <div class="food-card-footer">
+                        <span class="food-price">₹{{ item.price }}</span>
+
+                        {% if item.is_available %}
+                        <form method="POST" action="{% url 'add_to_cart' item.id %}" style="margin: 0;">
+                            {% csrf_token %}
+                            <input type="hidden" name="quantity" value="1">
+                            <input type="hidden" name="next"
+                                value="{% url 'menu' %}{% if selected_category %}?category={{ selected_category }}{% endif %}{% if search_query %}{% if selected_category %}&{% else %}?{% endif %}q={{ search_query }}{% endif %}{% if veg_only %}{% if selected_category or search_query %}&{% else %}?{% endif %}veg=true{% endif %}">
+                            <button type="submit" class="add-to-cart-btn">ADD +</button>
+                        </form>
+                        {% else %}
+                        <button class="add-to-cart-btn" disabled style="opacity: 0.5; cursor: not-allowed;">
+                            Unavailable
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state" style="grid-column: 1 / -1;">
+                <div class="empty-state-icon">🔍</div>
+                <h3>No items found</h3>
+                <p>{% if search_query %}No items match '{{ search_query }}'{% else %}There are no items in this category
+                    yet.{% endif %}</p>
+                <a href="{% url 'menu' %}" class="btn btn-primary">View All Items</a>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% with items=items %}
+        {% include 'includes/pagination_boxy.html' %}
+        {% endwith %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ---- Favorite Heart Button ---- */
+    .fav-heart-btn {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: none;
+        background: rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(4px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 5;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        padding: 0;
+        color: #fff;
+    }
+
+    .fav-heart-btn:hover {
+        background: rgba(0, 0, 0, 0.6);
+        transform: scale(1.1);
+    }
+
+    .fav-heart-btn:active {
+        transform: scale(0.9);
+    }
+
+    .fav-heart-btn svg {
+        width: 18px;
+        height: 18px;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .fav-heart-btn .heart-filled {
+        display: none;
+        color: #ef4444;
+    }
+
+    .fav-heart-btn .heart-outline {
+        display: block;
+    }
+
+    .fav-heart-btn.active .heart-filled {
+        display: block;
+    }
+
+    .fav-heart-btn.active .heart-outline {
+        display: none;
+    }
+
+    .fav-heart-btn.active {
+        background: rgba(255, 255, 255, 0.9);
+        color: #ef4444;
+    }
+
+    body.dark-mode .fav-heart-btn.active {
+        background: rgba(30, 30, 30, 0.9);
+    }
+
+    /* Pop animation on toggle */
+    @keyframes heartPop {
+        0% {
+            transform: scale(1);
+        }
+
+        30% {
+            transform: scale(1.3);
+        }
+
+        60% {
+            transform: scale(0.95);
+        }
+
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    .fav-heart-btn.pop {
+        animation: heartPop 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Force unregister old service worker to prevent cached pages
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+            registrations.forEach(reg => {
+                reg.unregister();
+                console.log('🧹 Unregistered old service worker');
+            });
+        });
+    }
+
+    // ===== Production-Level Search: Overlay Modal =====
+    const overlay = document.getElementById('searchOverlay');
+    const searchInput = document.getElementById('searchInput');
+    const searchDefault = document.getElementById('searchDefault');
+    const searchLoading = document.getElementById('searchLoading');
+    const searchResults = document.getElementById('searchResults');
+    const searchNoResults = document.getElementById('searchNoResults');
+    const searchError = document.getElementById('searchError');
+    const noResultsText = document.getElementById('noResultsText');
+    const recentSection = document.getElementById('recentSection');
+    const recentList = document.getElementById('recentList');
+    const searchFormQuery = document.getElementById('searchFormQuery');
+    const searchClearBtn = document.getElementById('searchClearBtn');
+    const searchRetryBtn = document.getElementById('searchRetryBtn');
+
+    let debounceTimer;
+    let selectedIndex = -1;
+    let currentResults = [];
+    let isSearchOpen = false;
+    let lastQuery = '';
+
+    // ---- Open / Close ----
+    window.openSearch = function () {
+        requestAnimationFrame(() => {
+            overlay.classList.add('active');
+        });
+        isSearchOpen = true;
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => {
+            searchInput.focus();
+            renderDefaultView();
+        }, 100);
+    };
+
+    window.closeSearch = function () {
+        clearTimeout(debounceTimer);
+        overlay.classList.remove('active');
+        isSearchOpen = false;
+        document.body.style.overflow = '';
+        searchInput.value = '';
+        updateClearBtn();
+        resetSearchUI();
+    };
+
+    // Close on backdrop click
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeSearch();
+    });
+
+    // Global keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+        if (e.key === '/' && !isSearchOpen && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+            e.preventDefault();
+            openSearch();
+        }
+        if (e.key === 'Escape' && isSearchOpen) {
+            closeSearch();
+        }
+    });
+
+    // ---- Clear Button ----
+    function updateClearBtn() {
+        searchClearBtn.style.display = searchInput.value.length > 0 ? '' : 'none';
+    }
+
+    searchClearBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        updateClearBtn();
+        renderDefaultView();
+        searchInput.focus();
+    });
+
+    // ---- Retry Button ----
+    searchRetryBtn.addEventListener('click', () => {
+        if (searchInput.value.trim()) {
+            handleInput();
+        }
+    });
+
+    // ---- Recent Searches (localStorage) ----
+    function getRecentSearches() {
+        try { return JSON.parse(localStorage.getItem('recentSearches') || '[]'); }
+        catch (e) { return []; }
+    }
+
+    function saveRecentSearch(item) {
+        let recent = getRecentSearches();
+        recent = recent.filter(r => r.id !== item.id);
+        recent.unshift({
+            id: item.id,
+            name: item.name,
+            category: item.category,
+            image_url: item.image_url,
+            is_veg: item.is_veg,
+            price: item.price
+        });
+        localStorage.setItem('recentSearches', JSON.stringify(recent.slice(0, 6)));
+    }
+
+    window.clearRecentSearches = function () {
+        localStorage.removeItem('recentSearches');
+        recentSection.style.display = 'none';
+    };
+
+    // ---- Default View (trending + recent) ----
+    function renderDefaultView() {
+        searchDefault.style.display = '';
+        searchLoading.style.display = 'none';
+        searchResults.style.display = 'none';
+        searchNoResults.style.display = 'none';
+        searchError.style.display = 'none';
+        renderRecent();
+    }
+
+    function renderRecent() {
+        const recent = getRecentSearches();
+        if (recent.length === 0) {
+            recentSection.style.display = 'none';
+            return;
+        }
+        recentSection.style.display = '';
+        recentList.innerHTML = recent.map(item => `
+            <div class="search-recent-item" data-id="${item.id}">
+                <div class="recent-icon">
+                    ${item.image_url ? `<img src="${item.image_url}" alt="">` : '🍲'}
+                </div>
+                <div class="recent-info">
+                    <div class="recent-name">${escapeHtml(item.name)}</div>
+                    <div class="recent-meta">${escapeHtml(item.category || '')}${item.price ? ' • ₹' + item.price : ''}</div>
+                </div>
+                <span class="recent-arrow">↗</span>
+            </div>
+        `).join('');
+
+        recentList.querySelectorAll('.search-recent-item').forEach(el => {
+            el.addEventListener('click', () => {
+                const id = el.dataset.id;
+                const item = recent.find(r => String(r.id) === String(id));
+                if (item) selectItem(item);
+            });
+        });
+    }
+
+    // ---- Chip Click ----
+    window.chipSearch = function (term) {
+        searchInput.value = term;
+        updateClearBtn();
+        handleInput();
+        searchInput.focus();
+    };
+
+    // ---- Live Search Input ----
+    searchInput.addEventListener('input', () => {
+        updateClearBtn();
+        handleInput();
+    });
+
+    function handleInput() {
+        const query = searchInput.value.trim();
+        selectedIndex = -1;
+        lastQuery = query;
+
+        if (!query) {
+            renderDefaultView();
+            return;
+        }
+
+        // Show loading
+        searchDefault.style.display = 'none';
+        searchNoResults.style.display = 'none';
+        searchResults.style.display = 'none';
+        searchError.style.display = 'none';
+        searchLoading.style.display = '';
+
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            fetch(`/api/search/?q=${encodeURIComponent(query)}`)
+                .then(r => {
+                    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                    return r.json();
+                })
+                .then(data => {
+                    if (!isSearchOpen || searchInput.value.trim() !== query) return; // stale or closed
+
+                    searchLoading.style.display = 'none';
+                    currentResults = data.results;
+
+                    if (currentResults.length === 0) {
+                        searchNoResults.style.display = '';
+                        noResultsText.textContent = `No match for "${query}". Try something else.`;
+                        searchResults.style.display = 'none';
+                    } else {
+                        renderResults(currentResults, query);
+                    }
+                })
+                .catch(err => {
+                    console.error('Search error:', err);
+                    if (!isSearchOpen || searchInput.value.trim() !== query) return;
+                    searchLoading.style.display = 'none';
+                    searchError.style.display = '';
+                });
+        }, 250);
+    }
+
+    // ---- Render Results (XSS-safe: no JSON in data attributes) ----
+    function renderResults(results, query) {
+        let html = results.map((item, idx) => `
+            <div class="search-result-item" data-index="${idx}" style="animation-delay:${idx * 30}ms">
+                <div class="result-image">
+                    ${item.image_url
+                ? `<img src="${escapeHtml(item.image_url)}" alt="">`
+                : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1rem;color:var(--gray-300);">🍽️</div>'}
+                    ${!item.is_available ? '<div class="sold-out-badge">SOLD</div>' : ''}
+                </div>
+                <div class="result-info">
+                    <div class="result-name"><span class="veg-dot ${item.is_veg ? 'veg' : 'nonveg'}"></span>${highlightMatch(escapeHtml(item.name), query)}</div>
+                    <div class="result-meta">${escapeHtml(item.category)}${item.rating > 0 ? ' · ★' + item.rating : ''}</div>
+                </div>
+                <span class="result-price ${!item.is_available ? 'unavailable' : ''}">₹${item.price}</span>
+            </div>
+        `).join('');
+
+        html += `
+            <div class="search-view-all" id="searchViewAll" data-index="${results.length}">
+                🔍 View all results for "${escapeHtml(query)}"
+            </div>
+        `;
+
+        searchResults.innerHTML = html;
+        searchResults.style.display = '';
+
+        // Click handlers — look up from currentResults by index (no JSON in DOM)
+        searchResults.querySelectorAll('.search-result-item').forEach(el => {
+            el.addEventListener('click', () => {
+                const idx = parseInt(el.dataset.index, 10);
+                if (currentResults[idx]) selectItem(currentResults[idx]);
+            });
+        });
+
+        document.getElementById('searchViewAll')?.addEventListener('click', () => {
+            submitFullSearch(query);
+        });
+    }
+
+    // ---- Highlight + Escape ----
+    function highlightMatch(text, query) {
+        if (!query) return text;
+        const words = query.split(/\s+/).filter(w => w.length > 0);
+        let highlighted = text;
+        words.forEach(w => {
+            const escaped = w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(`(${escaped})`, 'gi');
+            highlighted = highlighted.replace(regex, '<span class="highlight">$1</span>');
+        });
+        return highlighted;
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    // ---- Selection ----
+    function selectItem(item) {
+        saveRecentSearch(item);
+        closeSearch();
+        window.location.href = `/menu/${item.id}/`;
+    }
+
+    function submitFullSearch(query) {
+        searchFormQuery.value = query;
+        document.getElementById('searchForm').submit();
+    }
+
+    // ---- Keyboard Navigation (includes "View all" row) ----
+    searchInput.addEventListener('keydown', (e) => {
+        const resultItems = searchResults.querySelectorAll('.search-result-item');
+        const viewAll = document.getElementById('searchViewAll');
+        const totalNav = resultItems.length + (viewAll ? 1 : 0);
+
+        if (e.key === 'ArrowDown') {
+            if (!totalNav) return;
+            e.preventDefault();
+            selectedIndex = (selectedIndex + 1) % totalNav;
+            updateNavHighlight(resultItems, viewAll);
+        } else if (e.key === 'ArrowUp') {
+            if (!totalNav) return;
+            e.preventDefault();
+            selectedIndex = (selectedIndex - 1 + totalNav) % totalNav;
+            updateNavHighlight(resultItems, viewAll);
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (selectedIndex >= 0 && selectedIndex < resultItems.length && resultItems[selectedIndex]) {
+                resultItems[selectedIndex].click();
+            } else if (selectedIndex === resultItems.length && viewAll) {
+                viewAll.click();
+            } else if (searchInput.value.trim()) {
+                submitFullSearch(searchInput.value.trim());
+            } else {
+                closeSearch();
+            }
+        }
+    });
+
+    function updateNavHighlight(resultItems, viewAll) {
+        resultItems.forEach((item, idx) => {
+            item.classList.toggle('active', idx === selectedIndex);
+        });
+        if (viewAll) {
+            viewAll.classList.toggle('active', selectedIndex === resultItems.length);
+        }
+        // Scroll active item into view
+        const activeEl = selectedIndex < resultItems.length
+            ? resultItems[selectedIndex]
+            : viewAll;
+        if (activeEl) activeEl.scrollIntoView({ block: 'nearest' });
+    }
+
+    // ---- Reset UI ----
+    function resetSearchUI() {
+        searchDefault.style.display = '';
+        searchLoading.style.display = 'none';
+        searchResults.style.display = 'none';
+        searchNoResults.style.display = 'none';
+        searchError.style.display = 'none';
+        selectedIndex = -1;
+        currentResults = [];
+    }
+
+    // ===== Real-time Menu Availability (AJAX Polling + WebSocket) =====
+
+    const knownAvailability = {};
+    document.querySelectorAll('.food-card[data-item-id]').forEach(card => {
+        const itemId = card.dataset.itemId;
+        const badge = card.querySelector('.food-badge');
+        const isAvailable = badge ? !badge.textContent.includes('Out of Stock') : true;
+        knownAvailability[itemId] = isAvailable;
+    });
+
+    function pollAvailability() {
+        fetch('/api/menu-availability/', {
+            credentials: 'same-origin',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+            .then(response => {
+                if (response.redirected || !response.ok) throw new Error('Auth or network error: ' + response.status);
+                return response.json();
+            })
+            .then(data => {
+                const availability = data.availability;
+                for (const [itemId, isAvailable] of Object.entries(availability)) {
+                    if (knownAvailability.hasOwnProperty(itemId) && knownAvailability[itemId] !== isAvailable) {
+                        console.log(`🔄 Menu item ${itemId} changed: ${knownAvailability[itemId]} → ${isAvailable}`);
+                        knownAvailability[itemId] = isAvailable;
+                        updateMenuItem(itemId, isAvailable);
+                        showUpdateToast(itemId, isAvailable);
+                    }
+                }
+            })
+            .catch(err => {
+                console.error('❌ Availability poll failed:', err.message);
+            });
+    }
+
+    function showUpdateToast(itemId, isAvailable) {
+        const card = document.querySelector(`.food-card[data-item-id="${itemId}"]`);
+        const itemName = card ? card.querySelector('.food-card-title')?.textContent || `Item #${itemId}` : `Item #${itemId}`;
+        const msg = isAvailable ? `✅ ${itemName} is now available!` : `❌ ${itemName} has been removed from menu`;
+        const toast = document.createElement('div');
+        toast.style.cssText = `position:fixed;top:20px;right:20px;z-index:99999;padding:12px 20px;border-radius:8px;color:white;font-weight:bold;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,0.3);transition:opacity 0.5s;background:${isAvailable ? '#22c55e' : '#ef4444'}`;
+        toast.textContent = msg;
+        document.body.appendChild(toast);
+        setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 500); }, 3000);
+    }
+
+    // ===== Favorite Heart Toggle (AJAX) =====
+    function toggleFav(btn, itemId) {
+        fetch(`/menu/${itemId}/favorite/`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            credentials: 'same-origin',
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'ok') {
+                    btn.classList.toggle('active', data.is_favorited);
+                    btn.classList.add('pop');
+                    setTimeout(() => btn.classList.remove('pop'), 400);
+                    if (typeof showToast === 'function') {
+                        showToast(data.message, 'success');
+                    }
+                }
+            })
+            .catch(err => {
+                console.error('Favorite toggle failed:', err);
+                if (typeof showToast === 'function') {
+                    showToast('Failed to update favorites', 'error');
+                }
+            });
+    }
+
+    console.log('🟢 Menu real-time polling started. Tracked items:', Object.keys(knownAvailability).length);
+    pollAvailability();
+    setInterval(pollAvailability, 3000);
+
+    try {
+        const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+        const wsUrl = protocol + window.location.host + '/ws/menu/';
+        let socket;
+
+        function wsConnect() {
+            socket = new WebSocket(wsUrl);
+            socket.onopen = () => console.log('Menu WebSocket connected');
+            socket.onmessage = (e) => {
+                const data = JSON.parse(e.data);
+                if (data.type === 'menu_update') {
+                    const itemId = String(data.item_id);
+                    knownAvailability[itemId] = data.is_available;
+                    updateMenuItem(itemId, data.is_available);
+                }
+            };
+            socket.onclose = () => setTimeout(wsConnect, 5000);
+            socket.onerror = () => { };
+        }
+        wsConnect();
+    } catch (e) {
+        console.log('WebSocket not available, using polling only');
+    }
+
+    function updateMenuItem(itemId, isAvailable) {
+        const cards = document.querySelectorAll(`.food-card[data-item-id="${itemId}"]`);
+
+        cards.forEach(card => {
+            if (!isAvailable) {
+                card.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    card.style.display = 'none';
+                }, 400);
+            } else {
+                card.style.display = '';
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.95)';
+                void card.offsetHeight;
+                card.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'scale(1)';
+
+                const badge = card.querySelector('.food-badge:not(.special)');
+                const footer = card.querySelector('.food-card-footer');
+
+                if (badge) {
+                    badge.textContent = 'Available';
+                    badge.style.background = '';
+                }
+
+                if (footer) {
+                    let form = footer.querySelector('form');
+                    if (!form) {
+                        const csrfToken = getCookie('csrftoken');
+                        const priceEl = footer.querySelector('.food-price');
+                        const priceText = priceEl ? priceEl.textContent : '';
+                        footer.innerHTML = `<span class="food-price">${priceText}</span>
+                            <form method="POST" action="/cart/add/${itemId}/" style="margin: 0;">
+                                <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+                                <input type="hidden" name="quantity" value="1">
+                                <input type="hidden" name="next" value="${window.location.pathname + window.location.search}">
+                                <button type="submit" class="add-to-cart-btn">ADD +</button>
+                            </form>`;
+                    }
+                }
+            }
+        });
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+{% endblock %}

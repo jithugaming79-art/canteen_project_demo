@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+
+{% block title %}My Feedback - Campus Bites{% endblock %}
+
+{% block content %}
+<section style="padding: 2rem 0; background: var(--gray-50); min-height: 80vh;">
+    <div class="container" style="max-width: 900px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem;">
+            <div>
+                <h1 style="font-size: 2.2rem; margin-bottom: 0.5rem; color: var(--gray-900);">Help us Improve</h1>
+                <p style="color: var(--gray-600); font-size: 1.1rem;">We value your suggestions, complaints, and
+                    feedback.</p>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 2rem; align-items: start;">
+            <!-- SUBMIT FEEDBACK FORM -->
+            <div class="card" style="padding: 2rem; position: sticky; top: 100px;">
+                <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Submit New Feedback</h3>
+                <form action="{% url 'user_feedback' %}" method="post">
+                    {% csrf_token %}
+
+                    <div style="margin-bottom: 1.2rem;">
+                        <label
+                            style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem;">Subject</label>
+                        <input type="text" name="subject" required placeholder="e.g. App suggeston, Food quality..."
+                            style="width: 100%; padding: 0.8rem; border: 1.5px solid var(--gray-200); border-radius: 12px; font-family: inherit; transition: border-color 0.2s;">
+                    </div>
+
+                    <div style="margin-bottom: 1.2rem;">
+                        <label
+                            style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem;">Rating
+                            the Service</label>
+                        <div class="star-rating" id="feedbackStars" style="display: flex; gap: 4px;">
+                            {% for i in "12345" %}
+                            <span class="star" data-rating="{{ forloop.counter }}"
+                                onclick="setFeedbackRating({{ forloop.counter }})"
+                                style="font-size: 1.8rem; cursor: pointer; color: #ddd; transition: transform 0.2s;">★</span>
+                            {% endfor %}
+                        </div>
+                        <input type="hidden" name="rating" id="feedbackRatingInput" value="0">
+                    </div>
+
+                    <div style="margin-bottom: 1.5rem;">
+                        <label
+                            style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem;">Message</label>
+                        <textarea name="message" rows="5" required placeholder="Tell us more details..."
+                            style="width: 100%; padding: 0.8rem; border: 1.5px solid var(--gray-200); border-radius: 12px; font-family: inherit; resize: vertical;"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1rem; font-weight: 700;">
+                        Submit Feedback
+                    </button>
+                </form>
+            </div>
+
+            <!-- FEEDBACK HISTORY -->
+            <div>
+                <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">My Previous Feedback</h3>
+
+                {% if feedbacks %}
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    {% for fb in feedbacks %}
+                    <div class="card"
+                        style="padding: 1.5rem; border-left: 4px solid {% if fb.status == 'resolved' %}var(--success){% elif fb.status == 'in_progress' %}var(--warning){% else %}var(--gray-300){% endif %}; transition: transform 0.2s;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                            <div>
+                                <h4 style="margin: 0 0 0.2rem; font-size: 1.1rem; color: var(--gray-900);">{{ fb.subject
+                                    }}</h4>
+                                <span style="font-size: 0.8rem; color: var(--gray-500);">{{ fb.created_at|date:"M d, Y •
+                                    h:i A" }}</span>
+                            </div>
+                            <span class="badge" style="
+                                    background: {% if fb.status == 'resolved' %}#dcfce7{% elif fb.status == 'in_progress' %}#fef9c3{% else %}#f3f4f6{% endif %};
+                                    color: {% if fb.status == 'resolved' %}#166534{% elif fb.status == 'in_progress' %}#854d0e{% else %}#374151{% endif %};
+                                    font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; font-weight: 600; text-transform: capitalize;
+                                ">
+                                {{ fb.get_status_display }}
+                            </span>
+                        </div>
+
+                        <p style="color: var(--gray-700); line-height: 1.5; margin-bottom: 1rem;">{{ fb.message }}</p>
+
+                        {% if fb.rating > 0 %}
+                        <div style="margin-bottom: 1rem;">
+                            <span style="color: var(--warning); margin-right: 4px;">
+                                {% for i in "12345" %}
+                                {% if forloop.counter <= fb.rating %}★{% else %}☆{% endif %} {% endfor %} </span>
+                                    <span style="font-size: 0.85rem; color: var(--gray-500);">({{ fb.rating }}/5)</span>
+                        </div>
+                        {% endif %}
+
+                        {% if fb.admin_response %}
+                        <div
+                            style="background: #f0f9ff; padding: 1rem; border-radius: 12px; border: 1px solid #e0f2fe; margin-top: 1rem;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 0.5rem;">
+                                <div
+                                    style="width: 24px; height: 24px; background: #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px;">
+                                    CB</div>
+                                <span style="font-weight: 700; font-size: 0.9rem; color: #1e40af;">Admin Response</span>
+                            </div>
+                            <p style="margin: 0; color: #1e3a8a; font-size: 0.95rem; line-height: 1.5;">{{
+                                fb.admin_response }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="card" style="text-align: center; padding: 4rem 2rem; color: var(--gray-400);">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">💬</div>
+                    <h4>No feedback submitted yet.</h4>
+                    <p>Your history will appear here once you submit your first feedback.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .star.active {
+        color: var(--warning) !important;
+        transform: scale(1.1);
+    }
+
+    .star:hover {
+        transform: scale(1.2);
+    }
+
+    input:focus,
+    textarea:focus {
+        outline: none;
+        border-color: var(--primary) !important;
+        box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.1);
+    }
+</style>
+
+<script>
+    function setFeedbackRating(rating) {
+        document.getElementById('feedbackRatingInput').value = rating;
+        const stars = document.querySelectorAll('#feedbackStars .star');
+        stars.forEach((star, index) => {
+            if (index < rating) {
+                star.classList.add('active');
+            } else {
+                star.classList.remove('active');
+            }
+        });
+    }
+</script>
+{% endblock %}

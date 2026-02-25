@@ -1,0 +1,457 @@
+﻿python : INFO 
+2026-02-24 
+09:43:37,252 apps 
+AXES: BEGIN version 
+8.3.0, blocking by 
+username or ip_address
+At line:1 char:1
++ python manage.py 
+test accounts 
+--verbosity=2 2>&1 | 
+Out-File -FilePat ...
++ ~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (INFO 2026-02-   
+ 24...e or ip_addre    
+ss:String) [], Rem    
+oteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+Creating test database 
+for alias 'default' 
+('test_canteen_db')...
+
+Found 9 test(s).
+Operations to perform:
+  Synchronize unmigrated apps: allauth, channels, daphne, facebook, google, jazzmin, messages, staticfiles
+  Apply all migrations: account, accounts, admin, auth, axes, contenttypes, menu, orders, payments, sessions, sites, socialaccount
+Synchronizing apps without migrations:
+  Creating tables...
+    Running deferred SQL...
+Running migrations:
+  Applying contenttypes.0001_initial... OK
+  Applying auth.0001_initial... OK
+  Applying account.0001_initial... OK
+  Applying account.0002_email_max_length... OK
+  Applying account.0003_alter_emailaddress_create_unique_verified_email... OK
+  Applying account.0004_alter_emailaddress_drop_unique_email... OK
+  Applying account.0005_emailaddress_idx_upper_email... OK
+  Applying account.0006_emailaddress_lower... OK
+  Applying account.0007_emailaddress_idx_email... OK
+  Applying account.0008_emailaddress_unique_primary_email_fixup... OK
+  Applying account.0009_emailaddress_unique_primary_email... OK
+  Applying accounts.0001_initial... OK
+  Applying accounts.0002_add_system_settings... OK
+  Applying accounts.0003_validstudent... OK
+  Applying accounts.0004_feedback... OK
+  Applying accounts.0005_systemsettings_upi_id... OK
+  Applying accounts.0006_validstaff... OK
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying auth.0009_alter_user_last_name_max_length... OK
+  Applying auth.0010_alter_group_name_max_length... OK
+  Applying auth.0011_update_proxy_permissions... OK
+  Applying auth.0012_alter_user_first_name_max_length... OK
+  Applying axes.0001_initial... OK
+  Applying axes.0002_auto_20151217_2044... OK
+  Applying axes.0003_auto_20160322_0929... OK
+  Applying axes.0004_auto_20181024_1538... OK
+  Applying axes.0005_remove_accessattempt_trusted... OK
+  Applying axes.0006_remove_accesslog_trusted... OK
+  Applying axes.0007_alter_accessattempt_unique_together... OK
+  Applying axes.0008_accessfailurelog... OK
+  Applying axes.0009_add_session_hash... OK
+  Applying axes.0010_accessattemptexpiration... OK
+  Applying menu.0001_initial... OK
+  Applying menu.0002_menuitem_is_vegetarian_review... OK
+  Applying menu.0003_favorite... OK
+  Applying menu.0004_add_performance_indexes... OK
+  Applying menu.0005_review_admin_response... OK
+  Applying orders.0001_initial... OK
+  Applying orders.0002_add_delivery_options... OK
+  Applying orders.0003_add_performance_indexes... OK
+  Applying orders.0004_payment_pending_status... OK
+  Applying orders.0005_order_scheduled_for... OK
+  Applying payments.0001_initial... OK
+  Applying payments.0002_alter_payment_options_and_more... OK
+  Applying payments.0003_payment_stripe_session_id_alter_payment_method... OK
+  Applying payments.0004_alter_payment_stripe_session_id... OK
+  Applying sessions.0001_initial... OK
+  Applying sites.0001_initial... OK
+  Applying sites.0002_alter_domain_unique... OK
+  Applying socialaccount.0001_initial... OK
+  Applying socialaccount.0002_token_max_lengths... OK
+  Applying socialaccount.0003_extra_data_default_dict... OK
+  Applying socialaccount.0004_app_provider_id_settings... OK
+  Applying socialaccount.0005_socialtoken_nullable_app... OK
+System check 
+identified some issues:
+
+WARNINGS:
+?: settings.ACCOUNT_AUT
+HENTICATION_METHOD is 
+deprecated, use: settin
+gs.ACCOUNT_LOGIN_METHOD
+S = {'email', 
+'username'}
+?: settings.ACCOUNT_EMA
+IL_REQUIRED is 
+deprecated, use: settin
+gs.ACCOUNT_SIGNUP_FIELD
+S = ['email*', 
+'username*', 
+'password1*', 
+'password2*']
+account.EmailAddress: 
+(models.W036) MySQL 
+does not support 
+unique constraints 
+with conditions.
+	HINT: A constraint 
+won't be created. 
+Silence this warning 
+if you don't care 
+about it.
+account.EmailAddress: 
+(models.W036) MySQL 
+does not support 
+unique constraints 
+with conditions.
+	HINT: A constraint 
+won't be created. 
+Silence this warning 
+if you don't care 
+about it.
+
+System check 
+identified 4 issues (0 
+silenced).
+test_admin_access (acco
+unts.tests.AdminDashboa
+rdTest.test_admin_acces
+s) ... INFO 2026-02-24 
+09:43:48,256 signals 
+Order #1 signal: 
+created=True, 
+status=pending
+INFO 2026-02-24 
+09:43:48,292 database 
+AXES: Successful login 
+by {username: "********
+************", 
+ip_address: "**********
+**********", 
+user_agent: 
+"<unknown>", 
+path_info: 
+"<unknown>"}.
+INFO 2026-02-24 
+09:43:48,297 database 
+AXES: Cleaned up 0 
+expired access 
+attempts from database 
+that were older than 
+2026-02-24 
+03:13:48.291968+00:00
+INFO 2026-02-24 
+09:43:48,303 database 
+AXES: Reset 0 access 
+attempts from database.
+INFO 2026-02-24 
+09:43:48,303 database 
+AXES: Deleted 0 failed 
+login attempts by 
+{username: "***********
+*********", 
+ip_address: "**********
+**********", 
+user_agent: 
+"<unknown>", 
+path_info: 
+"<unknown>"} from 
+database.
+ok
+test_student_access_den
+ied (accounts.tests.Adm
+inDashboardTest.test_st
+udent_access_denied) 
+... INFO 2026-02-24 
+09:43:49,930 signals 
+Order #2 signal: 
+created=True, 
+status=pending
+INFO 2026-02-24 
+09:43:49,956 database 
+AXES: Successful login 
+by {username: "********
+************", 
+ip_address: "**********
+**********", 
+user_agent: 
+"<unknown>", 
+path_info: 
+"<unknown>"}.
+INFO 2026-02-24 
+09:43:49,959 database 
+AXES: Cleaned up 0 
+expired access 
+attempts from database 
+that were older than 
+2026-02-24 
+03:13:49.956169+00:00
+INFO 2026-02-24 
+09:43:49,965 database 
+AXES: Reset 0 access 
+attempts from database.
+INFO 2026-02-24 
+09:43:49,965 database 
+AXES: Deleted 0 failed 
+login attempts by 
+{username: "***********
+*********", 
+ip_address: "**********
+**********", 
+user_agent: 
+"<unknown>", 
+path_info: 
+"<unknown>"} from 
+database.
+ok
+test_toggle_menu_availa
+bility (accounts.tests.
+AdminDashboardTest.test
+_toggle_menu_availabili
+ty) ... INFO 
+2026-02-24 
+09:43:51,428 signals 
+Order #3 signal: 
+created=True, 
+status=pending
+INFO 2026-02-24 
+09:43:51,451 database 
+AXES: Successful login 
+by {username: "********
+************", 
+ip_address: "**********
+**********", 
+user_agent: 
+"<unknown>", 
+path_info: 
+"<unknown>"}.
+INFO 2026-02-24 
+09:43:51,453 database 
+AXES: Cleaned up 0 
+expired access 
+attempts from database 
+that were older than 
+2026-02-24 
+03:13:51.450906+00:00
+INFO 2026-02-24 
+09:43:51,457 database 
+AXES: Reset 0 access 
+attempts from database.
+INFO 2026-02-24 
+09:43:51,458 database 
+AXES: Deleted 0 failed 
+login attempts by 
+{username: "***********
+*********", 
+ip_address: "**********
+**********", 
+user_agent: 
+"<unknown>", 
+path_info: 
+"<unknown>"} from 
+database.
+ok
+test_update_order_statu
+s (accounts.tests.Admin
+DashboardTest.test_upda
+te_order_status) ... 
+INFO 2026-02-24 
+09:43:52,943 signals 
+Order #4 signal: 
+created=True, 
+status=pending
+INFO 2026-02-24 
+09:43:52,971 database 
+AXES: Successful login 
+by {username: "********
+************", 
+ip_address: "**********
+**********", 
+user_agent: 
+"<unknown>", 
+path_info: 
+"<unknown>"}.
+INFO 2026-02-24 
+09:43:52,974 database 
+AXES: Cleaned up 0 
+expired access 
+attempts from database 
+that were older than 
+2026-02-24 
+03:13:52.971624+00:00
+INFO 2026-02-24 
+09:43:52,980 database 
+AXES: Reset 0 access 
+attempts from database.
+INFO 2026-02-24 
+09:43:52,981 database 
+AXES: Deleted 0 failed 
+login attempts by 
+{username: "***********
+*********", 
+ip_address: "**********
+**********", 
+user_agent: 
+"<unknown>", 
+path_info: 
+"<unknown>"} from 
+database.
+INFO 2026-02-24 
+09:43:53,001 signals 
+Order #4 signal: 
+created=False, 
+status=confirmed
+ok
+test_generic_login_erro
+r (accounts.tests.Secur
+ityTests.test_generic_l
+ogin_error) ... INFO 
+2026-02-24 
+09:43:54,790 database 
+AXES: User login 
+failed, running 
+database handler for 
+failure.
+INFO 2026-02-24 
+09:43:54,792 database 
+AXES: Cleaned up 0 
+expired access 
+attempts from database 
+that were older than 
+2026-02-24 
+03:13:53.686897+00:00
+WARNING 2026-02-24 
+09:43:54,795 database 
+AXES: New login 
+failure by {username: "
+********************", 
+ip_address: "**********
+**********", 
+user_agent: 
+"<unknown>", 
+path_info: "/login/"}. 
+Created new record in 
+the database.
+INFO 2026-02-24 
+09:43:56,238 database 
+AXES: User login 
+failed, running 
+database handler for 
+failure.
+INFO 2026-02-24 
+09:43:56,241 database 
+AXES: Cleaned up 0 
+expired access 
+attempts from database 
+that were older than 
+2026-02-24 
+03:13:54.807143+00:00
+WARNING 2026-02-24 
+09:43:56,247 database 
+AXES: New login 
+failure by {username: "
+********************", 
+ip_address: "**********
+**********", 
+user_agent: 
+"<unknown>", 
+path_info: "/login/"}. 
+Created new record in 
+the database.
+ok
+test_honeypot_rejects_b
+ots (accounts.tests.Sec
+urityTests.test_honeypo
+t_rejects_bots) ... ok
+test_password_change_re
+quires_old_password (ac
+counts.tests.SecurityTe
+sts.test_password_chang
+e_requires_old_password
+) ... INFO 2026-02-24 
+09:43:57,566 database 
+AXES: Successful login 
+by {username: "********
+************", 
+ip_address: "**********
+**********", 
+user_agent: 
+"<unknown>", 
+path_info: 
+"<unknown>"}.
+INFO 2026-02-24 
+09:43:57,568 database 
+AXES: Cleaned up 0 
+expired access 
+attempts from database 
+that were older than 
+2026-02-24 
+03:13:57.566409+00:00
+INFO 2026-02-24 
+09:43:57,574 database 
+AXES: Reset 0 access 
+attempts from database.
+INFO 2026-02-24 
+09:43:57,574 database 
+AXES: Deleted 0 failed 
+login attempts by 
+{username: "***********
+*********", 
+ip_address: "**********
+**********", 
+user_agent: 
+"<unknown>", 
+path_info: 
+"<unknown>"} from 
+database.
+ok
+test_registration_rate_
+limit (accounts.tests.S
+ecurityTests.test_regis
+tration_rate_limit) 
+... ok
+test_username_sanitizat
+ion (accounts.tests.Sec
+urityTests.test_usernam
+e_sanitization) ... ok
+
+-----------------------
+-----------------------
+-----------------------
+-
+Ran 9 tests in 13.938s
+
+OK
+Destroying test 
+database for alias 
+'default' 
+('test_canteen_db')...
+
+  Applying socialaccount.0006_alter_socialaccount_extra_data... OK

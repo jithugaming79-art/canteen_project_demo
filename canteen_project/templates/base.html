@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="College Canteen - Order delicious food online">
+    <meta name="theme-color" content="#ff6b35">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="CampusBites">
+    <title>{% block title %}College Canteen{% endblock %}</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="apple-touch-icon" href="/static/images/icon-192.png">
+
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="/static/css/style.css?v=32">
+
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body class="dark-mode">
+    <script>
+        // Check local storage immediately to prevent rendering flash
+        if (localStorage.getItem('theme') === 'light') {
+            document.body.classList.remove('dark-mode');
+        }
+    </script>
+    {% block navbar %}
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="{% url 'home' %}" class="navbar-brand">
+                🍔 <span>Campus</span> Bites
+            </a>
+
+            <button class="menu-toggle" onclick="toggleMobileMenu()">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="6" x2="21" y2="6" />
+                    <line x1="3" y1="12" x2="21" y2="12" />
+                    <line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
+            </button>
+
+            <div class="navbar-nav" id="navbarNav">
+                {% if user.is_authenticated %}
+
+                {% if user.profile.role == 'kitchen' and not user.profile.is_admin %}
+                <!-- KITCHEN STAFF NAV -->
+                <a href="{% url 'kitchen_dashboard' %}" class="nav-link active">Order Queue</a>
+                <button id="themeToggle" class="nav-link nav-icon-btn" title="Toggle Dark Mode">
+                    <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5" />
+                        <line x1="12" y1="1" x2="12" y2="3" />
+                        <line x1="12" y1="21" x2="12" y2="23" />
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                        <line x1="1" y1="12" x2="3" y2="12" />
+                        <line x1="21" y1="12" x2="23" y2="12" />
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                    </svg>
+                    <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                    </svg>
+                </button>
+                <a href="{% url 'logout' %}" class="nav-link">Logout</a>
+
+                {% else %}
+                <!-- REGULAR USER / ADMIN NAV -->
+                <a href="{% url 'home' %}" class="nav-link {% if request.path == '/' %}active{% endif %}">Home</a>
+                <a href="{% url 'menu' %}" class="nav-link {% if 'menu' in request.path %}active{% endif %}">Menu</a>
+                <a href="{% url 'order_history' %}"
+                    class="nav-link {% if 'orders' in request.path %}active{% endif %}">My Orders</a>
+                <a href="{% url 'favorites' %}"
+                    class="nav-link {% if 'favorites' in request.path %}active{% endif %}">Favorites</a>
+
+                <a href="{% url 'wallet' %}" class="nav-wallet-badge">
+                    ₹{{ user.profile.wallet_balance }}
+                </a>
+
+                <button id="themeToggle" class="nav-link nav-icon-btn" title="Toggle Dark Mode">
+                    <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5" />
+                        <line x1="12" y1="1" x2="12" y2="3" />
+                        <line x1="12" y1="21" x2="12" y2="23" />
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                        <line x1="1" y1="12" x2="3" y2="12" />
+                        <line x1="21" y1="12" x2="23" y2="12" />
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                    </svg>
+                    <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                    </svg>
+                </button>
+
+                <a href="{% url 'view_cart' %}" class="nav-link nav-cart nav-icon-btn" title="Cart">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="21" r="1" />
+                        <circle cx="20" cy="21" r="1" />
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+                    </svg>
+                    {% if request.session.cart %}
+                    <span class="cart-badge">{{ request.session.cart|length }}</span>
+                    {% endif %}
+                </a>
+
+                <a href="{% url 'logout' %}" class="nav-link">Logout</a>
+
+                {% if user.profile.is_admin %}
+                <div class="nav-admin-links">
+                    <a href="{% url 'custom_admin_overview' %}" class="nav-link nav-admin-link">Admin</a>
+                    <a href="{% url 'kitchen_dashboard' %}" class="nav-link nav-kitchen-link">Kitchen</a>
+                </div>
+                {% endif %}
+                {% endif %}
+
+                {% else %}
+                <button id="themeToggle" class="nav-link nav-icon-btn" title="Toggle Dark Mode">
+                    <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5" />
+                        <line x1="12" y1="1" x2="12" y2="3" />
+                        <line x1="12" y1="21" x2="12" y2="23" />
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                        <line x1="1" y1="12" x2="3" y2="12" />
+                        <line x1="21" y1="12" x2="23" y2="12" />
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                    </svg>
+                    <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                    </svg>
+                </button>
+                <a href="{% url 'login' %}" class="btn btn-outline btn-sm">Login</a>
+                <a href="{% url 'register' %}" class="btn btn-primary btn-sm">Sign Up</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+    {% endblock %}
+
+    <!-- Flash Messages (Toasts) -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    {% if messages %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            {% for message in messages %}
+            showToast("{{ message|escapejs }}", "{{ message.tags }}");
+            {% endfor %}
+        });
+    </script>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    {% block footer %}
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div>
+                    <h4>🍔 CampusBites</h4>
+                    <p style="color: #93959f; font-size: 14px;">
+                        Your favorite college canteen, now digital. Order food, skip the queue!
+                    </p>
+                </div>
+                <div>
+                    <h4>Quick Links</h4>
+                    <div class="footer-links">
+                        <a href="{% url 'menu' %}">Menu</a>
+                        <a href="{% url 'order_history' %}">My Orders</a>
+                        <a href="{% url 'wallet' %}">Wallet</a>
+                    </div>
+                </div>
+                <div>
+                    <h4>Help</h4>
+                    <div class="footer-links">
+                        <a href="#">FAQs</a>
+                        <a href="#">Contact Us</a>
+                        <a href="{% url 'user_feedback' %}">Feedback</a>
+                    </div>
+                </div>
+                <div>
+                    <h4>Timings</h4>
+                    <p style="color: #93959f; font-size: 14px;">
+                        Mon-Fri: 8AM - 6PM<br>
+                        Saturday: 9AM - 3PM<br>
+                        Sunday: Closed
+                    </p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2025 CampusBites - College Canteen Management System</p>
+            </div>
+        </div>
+    </footer>
+    {% endblock %}
+
+    <!-- Chatbot (Premium UI) -->
+    {% if user.is_authenticated %}
+    <div class="chat-fab-container">
+        <div class="chat-fab" onclick="toggleChat()">
+            <!-- Message Icon -->
+            <svg class="chat-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+            <!-- Close Icon -->
+            <svg class="close-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </div>
+        <div class="chat-fab-pulse"></div>
+    </div>
+
+    <div class="chat-window" id="chatWindow">
+        <div class="chat-header">
+            <div class="chat-header-info">
+                <div class="chat-avatar-large">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+                        <circle cx="12" cy="5" r="2"></circle>
+                        <path d="M12 7v4"></path>
+                        <line x1="8" y1="16" x2="8" y2="16"></line>
+                        <line x1="16" y1="16" x2="16" y2="16"></line>
+                    </svg>
+                </div>
+                <div>
+                    <h4>Assistant</h4>
+                    <span class="status-indicator">Online</span>
+                </div>
+            </div>
+            <div class="chat-header-actions">
+                <button class="chat-action-btn" onclick="clearChat()" title="Clear Chat">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                </button>
+                <button class="chat-action-btn" onclick="toggleChat()" title="Close">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="chat-date-divider">Today</div>
+            <div class="chat-message bot">
+                <div class="chat-avatar-small">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+                        <circle cx="12" cy="5" r="2"></circle>
+                        <path d="M12 7v4"></path>
+                        <line x1="8" y1="16" x2="8" y2="16"></line>
+                        <line x1="16" y1="16" x2="16" y2="16"></line>
+                    </svg>
+                </div>
+                <!-- Intro Message -->
+                <div class="chat-bubble">
+                    Hi {{ user.username }}! 👋<br>I'm your AI assistant. Need help with the <b>Menu or Orders?</b>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick replies - OUTSIDE the scrollable area, between messages and input -->
+        <div id="quickRepliesArea" class="quick-replies-fixed">
+            <div class="quick-replies">
+                <button class="quick-reply" onclick="sendQuickReply('Show me the menu')">🍔 Menu</button>
+                <button class="quick-reply" onclick="sendQuickReply('What are today\'s specials?')">⭐ Specials</button>
+                <button class="quick-reply" onclick="sendQuickReply('Where is my order?')">📦 My Orders</button>
+                <button class="quick-reply" onclick="sendQuickReply('Help')">❓ Help</button>
+            </div>
+        </div>
+
+        <div class="chat-input-area">
+            <input type="text" id="chatInput" placeholder="Type a message..." onkeypress="handleChatKeyPress(event)">
+            <button class="chat-send-btn" onclick="sendChatMessage()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+            </button>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Scripts -->
+    <script>
+        // Mobile Menu Toggle
+        function toggleMobileMenu() {
+            document.getElementById('navbarNav').classList.toggle('active');
+        }
+
+        // =======================
+        // Chatbot Logic (Production)
+        // =======================
+        const CHAT_HISTORY_KEY = 'campusbites_chat_history_v2';
+        const CHAT_STATE_KEY = 'campusbites_chat_open';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadChatHistory();
+
+            // Restore Open State
+            if (localStorage.getItem(CHAT_STATE_KEY) === 'true') {
+                const chatWindow = document.getElementById('chatWindow');
+                const fab = document.querySelector('.chat-fab');
+                if (chatWindow && fab) {
+                    chatWindow.classList.add('active');
+                    fab.classList.add('active');
+                    setTimeout(scrollToBottom, 100);
+                }
+            }
+        });
+
+        function toggleChat() {
+            const chatWindow = document.getElementById('chatWindow');
+            const fab = document.querySelector('.chat-fab');
+
+            chatWindow.classList.toggle('active');
+            fab.classList.toggle('active');
+
+            const isOpen = chatWindow.classList.contains('active');
+            localStorage.setItem(CHAT_STATE_KEY, isOpen);
+
+            if (isOpen) {
+                setTimeout(() => {
+                    document.getElementById('chatInput').focus();
+                    scrollToBottom();
+                }, 300);
+            }
+        }
+
+        function scrollToBottom() {
+            const messagesDiv = document.getElementById('chatMessages');
+            if (messagesDiv) messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function loadChatHistory() {
+            const history = JSON.parse(localStorage.getItem(CHAT_HISTORY_KEY) || '[]');
+            const messagesDiv = document.getElementById('chatMessages');
+            if (!messagesDiv) return;
+
+            // If history exists, clear default welcome message and render history
+            if (history.length > 0) {
+                messagesDiv.innerHTML = '<div class="chat-date-divider">Earlier</div>';
+                history.forEach(msg => renderMessageHTML(msg.text, msg.sender, msg.timestamp, false));
+                // Append Quick Replies at the end if last message was from bot?
+                // For now, let's always append quick replies for easy access.
+                addQuickReplies();
+            }
+            scrollToBottom();
+        }
+
+        function saveMessage(text, sender) {
+            const history = JSON.parse(localStorage.getItem(CHAT_HISTORY_KEY) || '[]');
+            const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            history.push({ text, sender, timestamp });
+            // Limit history to last 50 messages
+            if (history.length > 50) history.shift();
+            localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(history));
+            return timestamp;
+        }
+
+        function clearChat() {
+            if (confirm("Clear chat history?")) {
+                localStorage.removeItem(CHAT_HISTORY_KEY);
+                const messagesDiv = document.getElementById('chatMessages');
+                messagesDiv.innerHTML = `
+                    <div class="chat-date-divider">Today</div>
+                    <div class="chat-message bot">
+                        <div class="chat-avatar-small">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path><line x1="8" y1="16" x2="8" y2="16"></line><line x1="16" y1="16" x2="16" y2="16"></line></svg>
+                        </div>
+                        <div class="chat-bubble">Chat cleared! How can I help?</div>
+                        <span class="chat-timestamp">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                `;
+                addQuickReplies();
+            }
+        }
+
+        const DEFAULT_QUICK_REPLIES = [
+            { label: '🍔 Menu', message: 'Show me the menu' },
+            { label: '⭐ Specials', message: "What are today's specials?" },
+            { label: '📦 My Orders', message: 'Where is my order?' },
+            { label: '❓ Help', message: 'Help' },
+        ];
+
+        function addQuickReplies(replies) {
+            const area = document.getElementById('quickRepliesArea');
+            if (!area) return;
+
+            const buttons = replies || DEFAULT_QUICK_REPLIES;
+            if (!buttons.length) {
+                area.style.display = 'none';
+                return;
+            }
+
+            const buttonsHTML = buttons.map(btn =>
+                `<button class="quick-reply" onclick="sendQuickReply('${btn.message.replace(/'/g, "\\'")}')">${btn.label}</button>`
+            ).join('');
+            area.innerHTML = `<div class="quick-replies">${buttonsHTML}</div>`;
+            area.style.display = 'block';
+        }
+
+        function removeQuickReplies() {
+            const area = document.getElementById('quickRepliesArea');
+            if (area) area.style.display = 'none';
+        }
+
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter') sendChatMessage();
+        }
+
+        function sendQuickReply(msg) {
+            document.getElementById('chatInput').value = msg;
+            sendChatMessage();
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message) return;
+
+            input.value = '';
+
+            // 1. Remove old Quick Replies
+            removeQuickReplies();
+
+            // 2. Render User Message
+            const timestamp = saveMessage(message, 'user');
+            renderMessageHTML(message, 'user', timestamp, true);
+
+            // 3. Show Typing
+            showTyping();
+
+            // 4. API Call
+            fetch('/chat/api/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ message: message })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    hideTyping();
+                    const ts = saveMessage(data.response || 'Sorry, no response.', 'bot');
+                    renderMessageHTML(data.response || 'Sorry, no response.', 'bot', ts, true);
+                    // Dynamic quick replies from API, fall back to defaults
+                    addQuickReplies(data.quick_replies && data.quick_replies.length ? data.quick_replies : null);
+                    // Extra scroll after render to guarantee chips are visible
+                    setTimeout(() => scrollToBottom(), 150);
+                })
+                .catch(() => {
+                    hideTyping();
+                    renderMessageHTML("Connection error. Please try again.", 'bot', new Date().toLocaleTimeString(), false);
+                    addQuickReplies();
+                });
+        }
+
+        function renderMessageHTML(text, sender, timestamp, scrollToEnd = true) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `chat-message ${sender}`;
+
+            // Markdown Parsing (Basic)
+            let formattedText = text
+                .replace(/\n/g, '<br>')
+                .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>') // Bold
+                .replace(/__(.*?)__/g, '<i>$1</i>');    // Italics
+
+            // List handling (bullet points starting with - )
+            if (formattedText.includes('- ')) {
+                formattedText = formattedText.replace(/- (.*?)(<br>|$)/g, '<li>$1</li>');
+                formattedText = formattedText.replace(/(<li>.*<\/li>)/g, '<ul>$1</ul>');
+                // Fix nested ul/br issues if any (simple approach)
+            }
+
+            let avatarHTML = sender === 'bot' ? `
+                <div class="chat-avatar-small">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path><line x1="8" y1="16" x2="8" y2="16"></line><line x1="16" y1="16" x2="16" y2="16"></line></svg>
+                </div>` : '';
+
+            msgDiv.innerHTML = `
+                ${avatarHTML}
+                <div>
+                    <div class="chat-bubble">${formattedText}</div>
+                    <span class="chat-timestamp">${timestamp || ''}</span>
+                </div>
+            `;
+
+            messagesDiv.appendChild(msgDiv);
+            if (scrollToEnd) scrollToBottom();
+        }
+
+        function showTyping() {
+            const messagesDiv = document.getElementById('chatMessages');
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typing-indicator';
+            typingDiv.className = 'chat-message bot';
+            typingDiv.innerHTML = `
+                <div class="chat-avatar-small">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path><line x1="8" y1="16" x2="8" y2="16"></line><line x1="16" y1="16" x2="16" y2="16"></line></svg>
+                </div>
+                <div class="chat-bubble typing-bubble">
+                    <span>.</span><span>.</span><span>.</span>
+                </div>`;
+            messagesDiv.appendChild(typingDiv);
+            scrollToBottom();
+        }
+
+        function hideTyping() {
+            document.getElementById('typing-indicator')?.remove();
+        }
+
+
+        // =======================
+        // Dark Mode & Utilities
+        // =======================
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+
+        function updateThemeIcon() {
+            const isDark = body.classList.contains('dark-mode');
+            if (themeToggle) {
+                themeToggle.classList.toggle('dark-active', isDark);
+            }
+        }
+
+        // Check local storage (default to dark mode)
+        if (localStorage.getItem('theme') !== 'light') {
+            body.classList.add('dark-mode');
+        }
+        updateThemeIcon();
+
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                body.classList.toggle('dark-mode');
+                if (body.classList.contains('dark-mode')) {
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    localStorage.setItem('theme', 'light');
+                }
+                updateThemeIcon();
+            });
+        }
+
+        // Toast Notification System — Swiggy/Zomato Level
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+
+            // SVG icons matching each type
+            const icons = {
+                success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+                error: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+                danger: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+                warning: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+                info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+            };
+
+            const titles = {
+                success: 'Success',
+                error: 'Error',
+                danger: 'Error',
+                warning: 'Warning',
+                info: 'Info',
+            };
+
+            const t = (['success', 'error', 'danger', 'warning'].includes(type)) ? type : 'info';
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${t}`;
+            toast.innerHTML = `
+                <div class="toast-icon">${icons[t]}</div>
+                <div class="toast-body">
+                    <div class="toast-title">${titles[t]}</div>
+                    <div class="toast-text">${message}</div>
+                </div>
+                <button class="toast-close" onclick="dismissToast(this.parentElement)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+                <div class="toast-progress"></div>
+            `;
+
+            container.appendChild(toast);
+
+            // Auto-dismiss after 4 seconds
+            setTimeout(() => dismissToast(toast), 4000);
+        }
+
+        function dismissToast(toast) {
+            if (!toast || !toast.parentElement) return;
+            toast.classList.add('hiding');
+            setTimeout(() => { if (toast && toast.parentElement) toast.remove(); }, 350);
+        }
+    </script>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/static/sw.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('SW registration failed:', err));
+            });
+        }
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

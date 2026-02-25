@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Wallet - Canteen{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/payment.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="wallet-section">
+    <div class="container">
+        <div class="wallet-header-row">
+            <h2 class="section-title" style="margin-bottom:0;">👛 My Wallet</h2>
+            <button onclick="window.print()" class="btn btn-sm wallet-export-btn">🖨 Export Statement</button>
+        </div>
+
+        <div class="wallet-grid">
+            <!-- Balance Card -->
+            <div class="balance-card-wrapper">
+                <div class="balance-card">
+                    <p class="balance-label">Current Balance</p>
+                    <h1 class="balance-amount">₹{{ balance }}</h1>
+
+                    <!-- Cap progress bar -->
+                    <div class="wallet-cap-section">
+                        <div class="wallet-cap-header">
+                            <span class="wallet-cap-label">Wallet limit</span>
+                            <span class="wallet-cap-value">₹{{ balance }} / ₹{{ max_wallet }}</span>
+                        </div>
+                        <div class="wallet-cap-track">
+                            <div class="wallet-cap-fill {% if cap_pct >= 90 %}cap-danger{% elif cap_pct >= 70 %}cap-warning{% endif %}"
+                                style="width: {{ cap_pct }}%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Top-up form -->
+                    <form id="addMoneyForm" method="POST" action="{% url 'add_money_to_wallet' %}"
+                        style="display: flex; gap: 10px; margin-bottom: 12px;">
+                        {% csrf_token %}
+                        <input type="number" id="topup_amount" name="amount" placeholder="Enter amount"
+                            class="wallet-amount-input" min="10" required>
+                        <button type="button" onclick="startWalletTopup()" class="btn wallet-topup-btn">+ Add
+                            Money</button>
+                    </form>
+
+                    <div class="wallet-quick-amounts">
+                        <button type="button" onclick="setAmount(100)" class="wallet-quick-btn">+₹100</button>
+                        <button type="button" onclick="setAmount(200)" class="wallet-quick-btn">+₹200</button>
+                        <button type="button" onclick="setAmount(500)" class="wallet-quick-btn">+₹500</button>
+                        <button type="button" onclick="setAmount(1000)" class="wallet-quick-btn">+₹1000</button>
+                    </div>
+                </div>
+
+                <!-- Monthly summary -->
+                <div class="wallet-month-summary">
+                    <div class="month-stat credit">
+                        <div class="month-stat-icon">↑</div>
+                        <div>
+                            <div class="month-stat-label">This month in</div>
+                            <div class="month-stat-val">+₹{{ month_credits }}</div>
+                        </div>
+                    </div>
+                    <div class="month-stat-divider"></div>
+                    <div class="month-stat debit">
+                        <div class="month-stat-icon">↓</div>
+                        <div>
+                            <div class="month-stat-label">This month out</div>
+                            <div class="month-stat-val">-₹{{ month_debits }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Simulated Processing Overlay -->
+                <div class="processing-overlay" id="processingOverlay"
+                    style="border-radius: var(--radius-lg); z-index: 5;">
+                    <div class="spinner"></div>
+                    <div class="processing-text" id="procText1" style="font-size: 16px;">Initiating Top-up...</div>
+                    <div class="processing-subtext" style="font-size: 12px;">Contacting bank portal</div>
+                </div>
+
+                <!-- Simulated Success Overlay -->
+                <div class="success-overlay" id="successOverlay" style="border-radius: var(--radius-lg); z-index: 10;">
+                    <div class="success-icon-wrapper" style="width: 60px; height: 60px; margin-bottom: 15px;">
+                        <div class="success-icon" style="font-size: 30px;">✓</div>
+                    </div>
+                    <div class="success-title" style="font-size: 20px;">Top-up Successful!</div>
+                    <div class="success-amount" id="successAmountDisplay" style="font-size: 24px;">₹0</div>
+                    <p style="color: var(--gray-500); font-size: 12px; margin-bottom: 15px;">Redirecting...</p>
+                </div>
+            </div>
+
+            <!-- Transactions Panel -->
+            <div class="wallet-txn-panel">
+                <div class="txn-panel-header">
+                    <h3>Transactions</h3>
+                    <div class="txn-filter-tabs">
+                        <a href="?filter=all" class="txn-tab {% if filter_type == 'all' %}active{% endif %}">All</a>
+                        <a href="?filter=credit"
+                            class="txn-tab credit {% if filter_type == 'credit' %}active{% endif %}">↑ Credits</a>
+                        <a href="?filter=debit" class="txn-tab debit {% if filter_type == 'debit' %}active{% endif %}">↓
+                            Debits</a>
+                    </div>
+                </div>
+
+                <div class="txn-list">
+                    {% for txn in transactions %}
+                    <div class="txn-row">
+                        <div
+                            class="txn-icon-col {% if txn.transaction_type == 'credit' %}txn-credit{% else %}txn-debit{% endif %}">
+                            {% if txn.transaction_type == 'credit' %}↑{% else %}↓{% endif %}
+                        </div>
+                        <div class="txn-info">
+                            <p class="txn-desc">{{ txn.description }}</p>
+                            <small class="txn-date">{{ txn.created_at|date:"d M Y, h:i A" }}</small>
+                            {% if txn.reference_id %}
+                            <small class="txn-ref">Ref: {{ txn.reference_id }}</small>
+                            {% endif %}
+                        </div>
+                        <div
+                            class="txn-amount {% if txn.transaction_type == 'credit' %}txn-credit{% else %}txn-debit{% endif %}">
+                            {% if txn.transaction_type == 'credit' %}+{% else %}-{% endif %}₹{{ txn.amount }}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="txn-empty">
+                        <div class="txn-empty-icon">💸</div>
+                        <p class="txn-empty-title">No transactions yet</p>
+                        <p class="txn-empty-sub">Your wallet activity will appear here once you start using it.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pagination -->
+                {% with items=transactions %}
+                {% include 'includes/pagination.html' %}
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    function setAmount(amount) {
+        document.getElementById('topup_amount').value = amount;
+    }
+
+    function startWalletTopup() {
+        let amount = document.getElementById('topup_amount').value;
+        if (!amount || amount < 10) {
+            alert('Please enter a valid amount (Minimum ₹10)');
+            return;
+        }
+
+        document.getElementById('processingOverlay').classList.add('active');
+        let text = document.getElementById('procText1');
+
+        setTimeout(() => { text.innerText = 'Authorizing bank transfer...'; }, 1000);
+        setTimeout(() => { text.innerText = 'Adding funds to wallet...'; }, 2000);
+
+        setTimeout(() => {
+            document.getElementById('processingOverlay').classList.remove('active');
+            document.getElementById('successAmountDisplay').innerText = '₹' + amount;
+            document.getElementById('successOverlay').classList.add('active');
+
+            setTimeout(() => {
+                document.getElementById('addMoneyForm').submit();
+            }, 1000);
+        }, 3000);
+    }
+</script>
+
+<style>
+    @media print {
+
+        .wallet-topup-btn,
+        .wallet-quick-amounts,
+        .wallet-export-btn,
+        .txn-filter-tabs,
+        nav,
+        footer,
+        .balance-card form,
+        .wallet-cap-section {
+            display: none !important;
+        }
+
+        .wallet-grid {
+            grid-template-columns: 1fr !important;
+        }
+
+        .balance-card {
+            background: #f9f9f9 !important;
+            color: #000 !important;
+        }
+    }
+</style>
+{% endblock %}

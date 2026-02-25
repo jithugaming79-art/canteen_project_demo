@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Verify Your E-mail Address" %} - CampusBites{% endblock %}
+
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="auth-body">
+    <div class="auth-container">
+        <!-- Visual Side (Left) -->
+        <div class="auth-visual">
+            <div class="quote-container animate-enter delay-2">
+                <div class="quote-text">Verify<br>identity.</div>
+                <div class="quote-sub">One last step for complete access.</div>
+            </div>
+        </div>
+
+        <!-- Content Side (Right) -->
+        <div class="auth-content">
+            <a href="{% url 'home' %}" class="brand-title">🍔 CampusBites</a>
+
+            <div class="animate-enter delay-1" style="text-align: center; margin-bottom: 32px;">
+                <div style="font-size: 64px; margin-bottom: 20px;">✉️</div>
+                <h2 class="page-title">{% trans "Verify Your E-mail Address" %}</h2>
+            </div>
+
+            <div class="animate-enter delay-2">
+                <p style="color: #6b7280; font-size: 16px; margin-bottom: 32px; text-align: center; line-height: 1.5;">
+                    {% blocktrans %}We have sent an e-mail to you for verification. Follow the link provided to finalize
+                    the signup process. Please contact us if you do not receive it within a few minutes.{% endblocktrans
+                    %}
+                </p>
+
+                <a href="{% url 'account_login' %}" class="btn-ultra"
+                    style="text-decoration: none; display: flex; justify-content: center; align-items: center; background: #f3f4f6; color: #111827;">{%
+                    trans 'Back to Login' %}</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.body.classList.remove('dark-mode');
+    document.body.style.background = '#ffffff';
+    document.body.style.color = '#111827';
+    localStorage.setItem('theme', 'light');
+</script>
+{% endblock %}

@@ -1,0 +1,126 @@
+<div class="kds-card" data-status="{{ order.status }}" data-id="{{ order.id }}"
+    style="animation-delay: calc({{ forloop.counter0|default:0 }} * 0.06s)">
+
+    <!-- Card Header -->
+    <div class="kds-card-header">
+        <label class="kds-checkbox-container" title="Select Order">
+            <input type="checkbox" name="order_ids" value="{{ order.id }}" class="kds-card-checkbox"
+                form="bulkKitchenForm">
+            <div class="kds-checkmark">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </div>
+        </label>
+
+        <div class="kds-token">#{{ order.token_number }}</div>
+
+        <div class="kds-timer" data-created="{{ order.created_at|date:'c' }}">
+            <div class="kds-progress-wrapper" style="width: 16px; height: 16px;">
+                <svg class="kds-progress-svg" viewBox="0 0 24 24">
+                    <circle class="kds-progress-bg" cx="12" cy="12" r="8"></circle>
+                    <circle class="kds-progress-ring-circle" cx="12" cy="12" r="8"></circle>
+                </svg>
+            </div>
+            <span class="timer-text">0m 0s</span>
+        </div>
+    </div>
+
+    <div class="kds-card-body">
+        <!-- Customer Info -->
+        <div class="kds-customer-strip">
+            <div class="customer-avatar" style="background:hsl({{ order.user.id|add:100 }}, 55%, 50%); color: #fff;">
+                {{ order.user.username|first|upper }}</div>
+            <div class="customer-details">
+                <div class="customer-name">{{ order.user.username|truncatechars:20 }}</div>
+                <div class="customer-meta">
+                    {% if order.scheduled_for %}
+                    <span class="meta-tag type-preorder">Preorder · {{ order.scheduled_for|date:"M d, H:i" }}</span>
+                    {% else %}
+                    {% if order.delivery_type == 'pickup' %}
+                    <span class="meta-tag type-pickup">Takeaway</span>
+                    {% else %}
+                    <span class="meta-tag type-delivery">Delivery</span>
+                    <span class="meta-loc truncate">{{ order.delivery_location }}</span>
+                    {% endif %}
+                    {% endif %}
+                </div>
+                <div
+                    style="margin-top:2px; font-family:'DM Mono',monospace; font-size:10px; font-weight:500; color:var(--kds-text-subtle);">
+                    {{ order.get_total_items }} Items · ₹{{ order.total_amount|floatformat:0 }}
+                </div>
+            </div>
+        </div>
+
+        <div class="kds-divider-dashed"></div>
+
+        <!-- Items List -->
+        <div class="kds-items-list">
+            {% for item in order.items.all %}
+            <div class="kds-item-row">
+                <div class="kds-qty"><span class="qty-num">{{ item.quantity }}</span><span class="qty-x">×</span></div>
+                <div class="kds-item-details">
+                    <div class="kds-item-name">{{ item.item_name }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if order.special_instructions %}
+        <div class="kds-instructions">
+            <div class="instruct-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M12 20h9"></path>
+                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                </svg>
+            </div>
+            <div class="instruct-text">{{ order.special_instructions }}</div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Action Button -->
+    <div class="kds-card-footer">
+        <form method="POST" action="{% url 'kitchen_dashboard' %}" class="kds-action-form">
+            {% csrf_token %}
+            <input type="hidden" name="order_id" value="{{ order.id }}">
+
+            {% if order.status == 'pending' %}
+            <input type="hidden" name="status" value="confirmed">
+            <button type="submit" class="kds-action-btn kds-btn-accept">
+                <svg viewBox="0 0 24 24">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Accept Order
+            </button>
+            {% elif order.status == 'confirmed' %}
+            <input type="hidden" name="status" value="preparing">
+            <button type="submit" class="kds-action-btn kds-btn-cook">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2c0 0-4 4-4 8a4 4 0 0 0 8 0c0-4-4-8-4-8z"></path>
+                    <path d="M12 2v8"></path>
+                </svg>
+                Start Cooking
+            </button>
+            {% elif order.status == 'preparing' %}
+            <input type="hidden" name="status" value="ready">
+            <button type="submit" class="kds-action-btn kds-btn-ready">
+                <svg viewBox="0 0 24 24">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+                Mark Ready
+            </button>
+            {% elif order.status == 'ready' %}
+            <input type="hidden" name="status" value="collected">
+            <button type="submit" class="kds-action-btn kds-btn-collected">
+                <svg viewBox="0 0 24 24">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Handed Over
+            </button>
+            {% endif %}
+        </form>
+    </div>
+</div>

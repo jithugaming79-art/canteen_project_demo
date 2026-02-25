@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}My Orders - College Canteen{% endblock %}
+
+{% block content %}
+<section class="orders-page">
+    <div class="container">
+        <h2 class="section-title">📋 My Orders</h2>
+
+        {% if orders %}
+        {% for order in orders %}
+        <div class="order-card">
+            <div class="order-header">
+                <div>
+                    <span class="order-token">{{ order.token_number }}</span>
+                    <span style="color: var(--grey); font-size: 13px; margin-left: 15px;">
+                        {{ order.created_at|date:"d M Y, h:i A" }}
+                    </span>
+                </div>
+                <span class="order-status {{ order.status }}">
+                    {% if order.status == 'pending' %}⏳{% endif %}
+                    {% if order.status == 'confirmed' %}✓{% endif %}
+                    {% if order.status == 'preparing' %}👨‍🍳{% endif %}
+                    {% if order.status == 'ready' %}🔔{% endif %}
+                    {% if order.status == 'collected' %}✅{% endif %}
+                    {% if order.status == 'cancelled' %}✕{% endif %}
+                    {{ order.get_status_display }}
+                </span>
+            </div>
+
+            <div class="order-body">
+                <p class="order-items-list">
+                    {% for item in order.items.all %}
+                    <strong>{{ item.quantity }}×</strong> {{ item.item_name }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </p>
+
+                <div class="order-meta">
+                    <span>💳 {{ order.get_payment_method_display }}</span>
+                    <span>
+                        {% if order.is_paid %}
+                        <span style="color: var(--success);">✓ Paid</span>
+                        {% else %}
+                        <span style="color: var(--warning);">⏳ Payment Pending</span>
+                        {% endif %}
+                    </span>
+
+                    {% if order.scheduled_for %}
+                    <span style="color: #6366f1; margin-left: 10px;">📅 {{ order.scheduled_for|date:"d M, h:i A"
+                        }}</span>
+                    {% endif %}
+                    <!-- Delivery indicator -->
+                    {% if order.delivery_type == 'classroom' %}
+                    <span style="color: #3b82f6;">📚 {{ order.delivery_location }}</span>
+                    {% elif order.delivery_type == 'staffroom' %}
+                    <span style="color: #8b5cf6;">👨‍🏫 {{ order.delivery_location }}</span>
+                    {% else %}
+                    <span style="color: #64748b;">🏪 Pickup</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="order-footer">
+                <span class="order-total">₹{{ order.total_amount }}</span>
+
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <a href="{% url 'order_detail' order.id %}" class="btn btn-ghost btn-sm">
+                        View Details
+                    </a>
+
+                    <!-- Reorder button for completed/cancelled orders -->
+                    {% if order.status == 'collected' or order.status == 'cancelled' %}
+                    <a href="{% url 'reorder' order.id %}" class="btn btn-outline btn-sm"
+                        style="border-color: var(--primary); color: var(--primary);">
+                        🔄 Reorder
+                    </a>
+                    {% endif %}
+
+                    {% if order.status == 'pending' or order.status == 'confirmed' %}
+                    <form method="POST" action="{% url 'cancel_order' order.id %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm" style="background: var(--danger); color: white;"
+                            onclick="return confirm('Cancel this order?')">
+                            Cancel
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Pagination -->
+        {% with items=orders %}
+        {% include 'includes/pagination_boxy.html' %}
+        {% endwith %}
+        {% else %}
+        <!-- Empty State -->
+        <div class="empty-state">
+            <div class="empty-state-icon">📋</div>
+            <h3>No orders yet</h3>
+            <p>You haven't placed any orders yet. Start exploring our menu!</p>
+            <a href="{% url 'menu' %}" class="btn btn-primary">Browse Menu</a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

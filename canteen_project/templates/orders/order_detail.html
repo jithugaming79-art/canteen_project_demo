@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+
+{% block title %}Order {{ order.token_number }} - College Canteen{% endblock %}
+
+{% block content %}
+<section style="padding: 2rem 0;">
+    <div class="container" style="max-width: 800px;">
+        <!-- Back Button -->
+        <a href="{% url 'order_history' %}" class="btn btn-outline btn-sm" style="margin-bottom: 1.5rem;">
+            ← Back to Orders
+        </a>
+
+        <!-- Order Card -->
+        <div class="card" style="overflow: hidden;">
+            <!-- Header with Status -->
+            <div
+                style="background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); padding: 2rem; color: white; text-align: center;">
+                <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">{{ order.token_number }}</h1>
+                <p style="opacity: 0.9; margin-bottom: 1.5rem;">Status: {{ order.get_status_display }}</p>
+
+                <!-- Status Stepper -->
+                <div class="status-stepper">
+                    <div
+                        class="step {% if order.status == 'pending' or order.status == 'confirmed' or order.status == 'preparing' or order.status == 'ready' or order.status == 'collected' %}active{% endif %}">
+                        <div class="step-icon">⏳</div>
+                        <div class="step-label">Placed</div>
+                    </div>
+                    <div
+                        class="line {% if order.status == 'confirmed' or order.status == 'preparing' or order.status == 'ready' or order.status == 'collected' %}active{% endif %}">
+                    </div>
+
+                    <div
+                        class="step {% if order.status == 'confirmed' or order.status == 'preparing' or order.status == 'ready' or order.status == 'collected' %}active{% endif %}">
+                        <div class="step-icon">✓</div>
+                        <div class="step-label">Confirmed</div>
+                    </div>
+                    <div
+                        class="line {% if order.status == 'preparing' or order.status == 'ready' or order.status == 'collected' %}active{% endif %}">
+                    </div>
+
+                    <div
+                        class="step {% if order.status == 'preparing' or order.status == 'ready' or order.status == 'collected' %}active{% endif %}">
+                        <div class="step-icon">🍳</div>
+                        <div class="step-label">Preparing</div>
+                    </div>
+                    <div class="line {% if order.status == 'ready' or order.status == 'collected' %}active{% endif %}">
+                    </div>
+
+                    <div class="step {% if order.status == 'ready' or order.status == 'collected' %}active{% endif %}">
+                        <div class="step-icon">🔔</div>
+                        <div class="step-label">Ready</div>
+                    </div>
+                    <div class="line {% if order.status == 'collected' %}active{% endif %}"></div>
+
+                    <div class="step {% if order.status == 'collected' %}active{% endif %}">
+                        <div class="step-icon">✅</div>
+                        <div class="step-label">Collected</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Auto-refresh for live tracking -->
+            {% if order.status != 'collected' and order.status != 'cancelled' %}
+            <script>
+                setTimeout(function () {
+                    window.location.reload();
+                }, 10000); // Refresh every 10 seconds
+            </script>
+            {% endif %}
+
+            <style>
+                .status-stepper {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin-top: 1rem;
+                }
+
+                .step {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    position: relative;
+                    z-index: 1;
+                }
+
+                .step-icon {
+                    width: 30px;
+                    height: 30px;
+                    background: rgba(255, 255, 255, 0.2);
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin-bottom: 5px;
+                    transition: all 0.3s;
+                }
+
+                .step.active .step-icon {
+                    background: white;
+                    color: var(--primary);
+                    transform: scale(1.2);
+                    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+                }
+
+                .step-label {
+                    font-size: 0.75rem;
+                    opacity: 0.7;
+                }
+
+                .step.active .step-label {
+                    opacity: 1;
+                    font-weight: 600;
+                }
+
+                .line {
+                    height: 2px;
+                    width: 40px;
+                    background: rgba(255, 255, 255, 0.2);
+                    margin: 0 5px;
+                    margin-bottom: 15px;
+                    /* Align with icon */
+                }
+
+                .line.active {
+                    background: white;
+                }
+            </style>
+
+            <div style="padding: 2rem;">
+                <!-- QR Code Section -->
+                <div
+                    style="text-align: center; margin-bottom: 2rem; padding: 1.5rem; background: var(--gray-100); border-radius: var(--radius-md);">
+                    <img src="{{ order.qr_code_data }}" alt="Order QR Code"
+                        style="width: 180px; height: 180px; margin-bottom: 1rem;">
+                    <p style="color: #888; font-size: 0.9rem;">Show this QR code at the counter</p>
+                </div>
+
+                <!-- Order Info Grid -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+                    <div class="card" style="padding: 1rem; text-align: center;">
+                        <span style="color: #888; font-size: 0.85rem;">Order Date</span>
+                        <p style="font-weight: 600; margin: 0.3rem 0 0;">{{ order.created_at|date:"d M Y, h:i A" }}</p>
+                        {% if order.scheduled_for %}
+                        <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed var(--gray-200);">
+                            <span style="color: #6366f1; font-size: 0.85rem;">Scheduled For</span>
+                            <p style="font-weight: 600; margin: 0.3rem 0 0; color: #6366f1;">
+                                {{ order.scheduled_for|date:"d M, h:i A" }}
+                            </p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="card" style="padding: 1rem; text-align: center;">
+                        <span style="color: #888; font-size: 0.85rem;">Payment</span>
+                        <p style="font-weight: 600; margin: 0.3rem 0 0;">
+                            {{ order.get_payment_method_display }}
+                            {% if order.is_paid %}<span style="color: var(--success);">✓</span>{% endif %}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Order Items -->
+                <h4 style="margin-bottom: 1rem;">Order Items</h4>
+                <div style="border: 1px solid var(--gray-200); border-radius: var(--radius-md); overflow: hidden;">
+                    {% for item in order.items.all %}
+                    <div
+                        style="display: flex; justify-content: space-between; padding: 1rem; {% if not forloop.last %}border-bottom: 1px solid var(--gray-200);{% endif %}">
+                        <div>
+                            <strong>{{ item.item_name }}</strong>
+                            <span style="color: #888;"> × {{ item.quantity }}</span>
+                        </div>
+                        <span style="font-weight: 600;">₹{{ item.get_subtotal }}</span>
+                    </div>
+                    {% endfor %}
+
+                    <!-- Total -->
+                    <div
+                        style="display: flex; justify-content: space-between; padding: 1rem; background: var(--gray-100); font-size: 1.1rem;">
+                        <strong>Total</strong>
+                        <strong style="color: var(--primary);">₹{{ order.total_amount }}</strong>
+                    </div>
+                </div>
+
+                {% if order.special_instructions %}
+                <!-- Special Instructions -->
+                <div style="margin-top: 1.5rem; padding: 1rem; background: #fff3cd; border-radius: var(--radius-md);">
+                    <strong>📝 Special Instructions:</strong>
+                    <p style="margin: 0.5rem 0 0;">{{ order.special_instructions }}</p>
+                </div>
+                {% endif %}
+
+                <!-- Delivery Information -->
+                {% if order.delivery_type == 'classroom' or order.delivery_type == 'staffroom' %}
+                <div
+                    style="margin-top: 1.5rem; padding: 1rem; background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%); border-radius: var(--radius-md);">
+                    <strong>🚚 Delivery Information:</strong>
+                    <div style="margin-top: 0.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div>
+                            <span style="color: #64748b; font-size: 0.85rem;">Delivery Type</span>
+                            <p style="margin: 0; font-weight: 600;">
+                                {% if order.delivery_type == 'classroom' %}📚 Classroom{% endif %}
+                                {% if order.delivery_type == 'staffroom' %}👨‍🏫 Staffroom{% endif %}
+                            </p>
+                        </div>
+                        <div>
+                            <span style="color: #64748b; font-size: 0.85rem;">Location</span>
+                            <p style="margin: 0; font-weight: 600;">{{ order.delivery_location }}</p>
+                        </div>
+                    </div>
+                    {% if order.delivery_fee > 0 %}
+                    <p style="margin: 0.5rem 0 0; font-size: 0.85rem; color: #64748b;">
+                        Delivery Fee: ₹{{ order.delivery_fee }}
+                    </p>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div
+                    style="margin-top: 1.5rem; padding: 1rem; background: var(--gray-100); border-radius: var(--radius-md);">
+                    <strong>🏪 Pickup at Counter</strong>
+                    <p style="margin: 0.5rem 0 0; color: #64748b; font-size: 0.9rem;">
+                        Please collect your order from the canteen counter when it's ready.
+                    </p>
+                </div>
+                {% endif %}
+
+                <!-- Action Buttons -->
+                <div style="display: flex; gap: 1rem; margin-top: 2rem; justify-content: center;">
+                    {% if order.status == 'pending' %}
+                    <a href="{% url 'cancel_order' order.id %}" class="btn"
+                        style="background: var(--danger); color: white;" onclick="return confirm('Cancel this order?')">
+                        Cancel Order
+                    </a>
+                    {% endif %}
+
+                    {% if order.status == 'collected' or order.status == 'cancelled' %}
+                    <a href="{% url 'reorder' order.id %}" class="btn btn-primary">
+                        🔄 Reorder
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

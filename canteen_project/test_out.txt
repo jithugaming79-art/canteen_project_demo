@@ -1,0 +1,87 @@
+INFO 2026-02-23 19:18:39,907 apps AXES: BEGIN version 8.3.0, blocking by username or ip_address
+Creating test database for alias 'default'...
+System check identified some issues:
+
+WARNINGS:
+?: settings.ACCOUNT_AUTHENTICATION_METHOD is deprecated, use: settings.ACCOUNT_LOGIN_METHODS = {'email', 'username'}
+?: settings.ACCOUNT_EMAIL_REQUIRED is deprecated, use: settings.ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']
+account.EmailAddress: (models.W036) MySQL does not support unique constraints with conditions.
+	HINT: A constraint won't be created. Silence this warning if you don't care about it.
+account.EmailAddress: (models.W036) MySQL does not support unique constraints with conditions.
+	HINT: A constraint won't be created. Silence this warning if you don't care about it.
+
+System check identified 4 issues (0 silenced).
+INFO 2026-02-23 19:18:48,023 signals Order #1 signal: created=True, status=payment_pending
+.INFO 2026-02-23 19:18:48,640 signals Order #2 signal: created=True, status=payment_pending
+.INFO 2026-02-23 19:18:49,363 signals Order #3 signal: created=True, status=payment_pending
+.INFO 2026-02-23 19:18:50,119 signals Order #4 signal: created=True, status=pending
+INFO 2026-02-23 19:18:50,156 database AXES: Successful login by {username: "********************", ip_address: "********************", user_agent: "<unknown>", path_info: "<unknown>"}.
+INFO 2026-02-23 19:18:50,162 database AXES: Cleaned up 0 expired access attempts from database that were older than 2026-02-23 12:48:50.155916+00:00
+INFO 2026-02-23 19:18:50,169 database AXES: Reset 0 access attempts from database.
+INFO 2026-02-23 19:18:50,170 database AXES: Deleted 0 failed login attempts by {username: "********************", ip_address: "********************", user_agent: "<unknown>", path_info: "<unknown>"} from database.
+INFO 2026-02-23 19:18:50,220 signals Order #4 signal: created=False, status=pending
+.INFO 2026-02-23 19:18:50,912 signals Order #5 signal: created=True, status=pending
+INFO 2026-02-23 19:18:50,919 database AXES: Successful login by {username: "********************", ip_address: "********************", user_agent: "<unknown>", path_info: "<unknown>"}.
+INFO 2026-02-23 19:18:50,920 database AXES: Cleaned up 0 expired access attempts from database that were older than 2026-02-23 12:48:50.918962+00:00
+INFO 2026-02-23 19:18:50,922 database AXES: Reset 0 access attempts from database.
+INFO 2026-02-23 19:18:50,922 database AXES: Deleted 0 failed login attempts by {username: "********************", ip_address: "********************", user_agent: "<unknown>", path_info: "<unknown>"} from database.
+.INFO 2026-02-23 19:18:51,542 signals Order #6 signal: created=True, status=pending
+INFO 2026-02-23 19:18:51,565 database AXES: Successful login by {username: "********************", ip_address: "********************", user_agent: "<unknown>", path_info: "<unknown>"}.
+INFO 2026-02-23 19:18:51,567 database AXES: Cleaned up 0 expired access attempts from database that were older than 2026-02-23 12:48:51.565208+00:00
+INFO 2026-02-23 19:18:51,574 database AXES: Reset 0 access attempts from database.
+INFO 2026-02-23 19:18:51,575 database AXES: Deleted 0 failed login attempts by {username: "********************", ip_address: "********************", user_agent: "<unknown>", path_info: "<unknown>"} from database.
+.INFO 2026-02-23 19:18:52,335 signals Order #7 signal: created=True, status=pending
+INFO 2026-02-23 19:18:52,362 database AXES: Successful login by {username: "********************", ip_address: "********************", user_agent: "<unknown>", path_info: "<unknown>"}.
+INFO 2026-02-23 19:18:52,364 database AXES: Cleaned up 0 expired access attempts from database that were older than 2026-02-23 12:48:52.362033+00:00
+INFO 2026-02-23 19:18:52,369 database AXES: Reset 0 access attempts from database.
+INFO 2026-02-23 19:18:52,369 database AXES: Deleted 0 failed login attempts by {username: "********************", ip_address: "********************", user_agent: "<unknown>", path_info: "<unknown>"} from database.
+INFO 2026-02-23 19:18:52,394 signals Order #7 signal: created=False, status=confirmed
+.INFO 2026-02-23 19:18:53,214 signals Order #8 signal: created=True, status=pending
+INFO 2026-02-23 19:18:53,227 signals Order #8 signal: created=False, status=pending
+INFO 2026-02-23 19:18:53,251 database AXES: Successful login by {username: "********************", ip_address: "********************", user_agent: "<unknown>", path_info: "<unknown>"}.
+INFO 2026-02-23 19:18:53,254 database AXES: Cleaned up 0 expired access attempts from database that were older than 2026-02-23 12:48:53.251586+00:00
+INFO 2026-02-23 19:18:53,261 database AXES: Reset 0 access attempts from database.
+INFO 2026-02-23 19:18:53,261 database AXES: Deleted 0 failed login attempts by {username: "********************", ip_address: "********************", user_agent: "<unknown>", path_info: "<unknown>"} from database.
+.INFO 2026-02-23 19:18:54,001 signals Order #9 signal: created=True, status=pending
+INFO 2026-02-23 19:18:54,052 database AXES: Successful login by {username: "********************", ip_address: "********************", user_agent: "<unknown>", path_info: "<unknown>"}.
+INFO 2026-02-23 19:18:54,055 database AXES: Cleaned up 0 expired access attempts from database that were older than 2026-02-23 12:48:54.052798+00:00
+INFO 2026-02-23 19:18:54,062 database AXES: Reset 0 access attempts from database.
+INFO 2026-02-23 19:18:54,062 database AXES: Deleted 0 failed login attempts by {username: "********************", ip_address: "********************", user_agent: "<unknown>", path_info: "<unknown>"} from database.
+FINFO 2026-02-23 19:18:54,820 signals Order #10 signal: created=True, status=pending
+INFO 2026-02-23 19:18:54,844 database AXES: Successful login by {username: "********************", ip_address: "********************", user_agent: "<unknown>", path_info: "<unknown>"}.
+INFO 2026-02-23 19:18:54,846 database AXES: Cleaned up 0 expired access attempts from database that were older than 2026-02-23 12:48:54.844331+00:00
+INFO 2026-02-23 19:18:54,854 database AXES: Reset 0 access attempts from database.
+INFO 2026-02-23 19:18:54,854 database AXES: Deleted 0 failed login attempts by {username: "********************", ip_address: "********************", user_agent: "<unknown>", path_info: "<unknown>"} from database.
+.INFO 2026-02-23 19:18:55,615 signals Order #11 signal: created=True, status=pending
+INFO 2026-02-23 19:18:55,638 database AXES: Successful login by {username: "********************", ip_address: "********************", user_agent: "<unknown>", path_info: "<unknown>"}.
+INFO 2026-02-23 19:18:55,641 database AXES: Cleaned up 0 expired access attempts from database that were older than 2026-02-23 12:48:55.638346+00:00
+INFO 2026-02-23 19:18:55,646 database AXES: Reset 0 access attempts from database.
+INFO 2026-02-23 19:18:55,646 database AXES: Deleted 0 failed login attempts by {username: "********************", ip_address: "********************", user_agent: "<unknown>", path_info: "<unknown>"} from database.
+INFO 2026-02-23 19:18:55,669 signals Order #11 signal: created=False, status=confirmed
+.INFO 2026-02-23 19:18:56,456 database AXES: Successful login by {username: "********************", ip_address: "********************", user_agent: "<unknown>", path_info: "<unknown>"}.
+INFO 2026-02-23 19:18:56,459 database AXES: Cleaned up 0 expired access attempts from database that were older than 2026-02-23 12:48:56.456005+00:00
+INFO 2026-02-23 19:18:56,465 database AXES: Reset 0 access attempts from database.
+INFO 2026-02-23 19:18:56,465 database AXES: Deleted 0 failed login attempts by {username: "********************", ip_address: "********************", user_agent: "<unknown>", path_info: "<unknown>"} from database.
+.INFO 2026-02-23 19:18:57,197 database AXES: Successful login by {username: "********************", ip_address: "********************", user_agent: "<unknown>", path_info: "<unknown>"}.
+INFO 2026-02-23 19:18:57,200 database AXES: Cleaned up 0 expired access attempts from database that were older than 2026-02-23 12:48:57.197376+00:00
+INFO 2026-02-23 19:18:57,206 database AXES: Reset 0 access attempts from database.
+INFO 2026-02-23 19:18:57,206 database AXES: Deleted 0 failed login attempts by {username: "********************", ip_address: "********************", user_agent: "<unknown>", path_info: "<unknown>"} from database.
+.
+======================================================================
+FAIL: test_stripe_checkout_redirect (payments.tests.StripePaymentTestCase.test_stripe_checkout_redirect)
+Test creating a stripe checkout session
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python313\Lib\unittest\mock.py", line 1426, in patched
+    return func(*newargs, **newkeywargs)
+  File "C:\Users\INTEL\.gemini\antigravity\scratch\canteen_project\payments\tests.py", line 118, in test_stripe_checkout_redirect
+    self.assertEqual(response.status_code, 303)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 302 != 303
+
+----------------------------------------------------------------------
+Ran 13 tests in 9.704s
+
+FAILED (failures=1)
+Destroying test database for alias 'default'...
+Found 13 test(s).

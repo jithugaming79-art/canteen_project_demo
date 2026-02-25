@@ -1,0 +1,39 @@
+# Environment & Secrets
+.env
+.env.*
+
+# Python
+*.pyc
+__pycache__/
+venv/
+*.egg-info/
+
+# Database
+db.sqlite3
+
+# Debug artifacts
+debug_error.html
+debug_output.txt
+error.log
+server.log
+*.log
+test_output.txt
+check_output.txt
+verify_output*.txt
+chatbot_test_output.txt
+
+# Backup files
+*.sql
+*.bak
+data_backup*.json
+verification.*
+
+# Media uploads
+media/
+
+# Static collected
+staticfiles/
+
+# IDE
+.vscode/
+.idea/

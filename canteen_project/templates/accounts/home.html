@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - College Canteen{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="container">
+        <div class="hero-content">
+            <h1>Hungry? Order from your College Canteen!</h1>
+            <p>Skip the queue, order online, and enjoy delicious food. Get your token and pick up when ready!</p>
+            <a href="{% url 'menu' %}" class="btn btn-lg" style="background: white; color: var(--primary);">
+                🍽️ Explore Menu
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Categories Section -->
+<section class="categories">
+    <div class="container">
+        <h2 class="section-title">What would you like to eat?</h2>
+        <div class="category-grid">
+            <a href="{% url 'menu' %}?category=1" class="category-card">
+                <div class="icon">🍳</div>
+                <h4>Breakfast</h4>
+            </a>
+            <a href="{% url 'menu' %}?category=2" class="category-card">
+                <div class="icon">🍛</div>
+                <h4>Lunch</h4>
+            </a>
+            <a href="{% url 'menu' %}?category=3" class="category-card">
+                <div class="icon">🍟</div>
+                <h4>Snacks</h4>
+            </a>
+            <a href="{% url 'menu' %}?category=4" class="category-card">
+                <div class="icon">🥤</div>
+                <h4>Beverages</h4>
+            </a>
+            <a href="{% url 'menu' %}?category=5" class="category-card">
+                <div class="icon">🍰</div>
+                <h4>Desserts</h4>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Today's Specials -->
+{% if specials %}
+<section class="menu-section" style="background: var(--primary-light);">
+    <div class="container">
+        <h2 class="section-title">⭐ Today's Specials</h2>
+        <div class="menu-grid">
+            {% for item in specials %}
+            <div class="food-card">
+                <div class="food-card-image">
+                    {% if item.image %}
+                    <img src="{{ item.image.url }}" alt="{{ item.name }}">
+                    {% else %}
+                    <img src="https://via.placeholder.com/300x180?text=🍽️" alt="{{ item.name }}">
+                    {% endif %}
+                    <span class="food-badge special">⭐ Special</span>
+                </div>
+                <div class="food-card-body">
+                    <h3 class="food-card-title">{{ item.name }}</h3>
+                    <p class="food-card-category">{{ item.category.name }}</p>
+                    <div class="food-card-meta">
+                        {% if item.average_rating > 0 %}
+                        <span class="food-rating">★ {{ item.average_rating }}</span>
+                        {% else %}
+                        <span class="food-rating" style="color:var(--grey);">&#128221; New</span>
+                        {% endif %}
+                        <span class="food-time">⏱️ {{ item.preparation_time }} mins</span>
+                    </div>
+                    <div class="food-card-footer">
+                        <span class="food-price">₹{{ item.price }}</span>
+                        <form method="POST" action="{% url 'add_to_cart' item.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="quantity" value="1">
+                            <button type="submit" class="add-to-cart-btn">ADD +</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Popular Items -->
+<section class="menu-section">
+    <div class="container">
+        <div class="menu-header">
+            <h2 class="section-title">🔥 Popular Right Now</h2>
+            <a href="{% url 'menu' %}"
+                style="display:inline-flex; align-items:center; gap:6px; color:var(--primary); font-weight:600; font-size:14px; text-decoration:none; padding:8px 16px; border-radius:8px; transition:all 0.2s ease; background:rgba(252,128,25,0.08);">
+                See all
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round" style="transition:transform 0.2s ease;">
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                    <polyline points="12 5 19 12 12 19" />
+                </svg>
+            </a>
+        </div>
+        <div class="menu-grid">
+            {% for item in popular_items %}
+            <div class="food-card">
+                <div class="food-card-image">
+                    {% if item.image %}
+                    <img src="{{ item.image.url }}" alt="{{ item.name }}">
+                    {% else %}
+                    <img src="https://via.placeholder.com/300x180?text=🍽️" alt="{{ item.name }}">
+                    {% endif %}
+                    {% if item.is_available %}
+                    <span class="food-badge">Available</span>
+                    {% endif %}
+                </div>
+                <div class="food-card-body">
+                    <h3 class="food-card-title">{{ item.name }}</h3>
+                    <p class="food-card-category">{{ item.category.name }}</p>
+                    <div class="food-card-meta">
+                        {% if item.average_rating > 0 %}
+                        <span class="food-rating">★ {{ item.average_rating }}</span>
+                        {% else %}
+                        <span class="food-rating" style="color:var(--grey);">&#128221; New</span>
+                        {% endif %}
+                        <span class="food-time">⏱️ {{ item.preparation_time }} mins</span>
+                    </div>
+                    <div class="food-card-footer">
+                        <span class="food-price">₹{{ item.price }}</span>
+                        <form method="POST" action="{% url 'add_to_cart' item.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="quantity" value="1">
+                            <button type="submit" class="add-to-cart-btn">ADD +</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <p>No items available yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- How It Works -->
+<section style="padding: 60px 0; background: var(--white);">
+    <div class="container">
+        <h2 class="section-title text-center">How It Works</h2>
+        <div
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; margin-top: 40px; text-align: center;">
+            <div>
+                <div style="font-size: 48px; margin-bottom: 16px;">📱</div>
+                <h4>1. Browse Menu</h4>
+                <p style="color: var(--grey);">Choose from our wide variety of food items</p>
+            </div>
+            <div>
+                <div style="font-size: 48px; margin-bottom: 16px;">🛒</div>
+                <h4>2. Add to Cart</h4>
+                <p style="color: var(--grey);">Select items and add to your cart</p>
+            </div>
+            <div>
+                <div style="font-size: 48px; margin-bottom: 16px;">💳</div>
+                <h4>3. Pay & Get Token</h4>
+                <p style="color: var(--grey);">Pay online or at counter, get your token</p>
+            </div>
+            <div>
+                <div style="font-size: 48px; margin-bottom: 16px;">🎉</div>
+                <h4>4. Collect & Enjoy</h4>
+                <p style="color: var(--grey);">Pick up when your token is called!</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
