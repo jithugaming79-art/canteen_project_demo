@@ -135,12 +135,8 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# WhiteNoise storage for compressed and cached static files
-STORAGES = {
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
-    },
-}
+# WhiteNoise: serve static files directly from STATICFILES_DIRS as fallback
+WHITENOISE_USE_FINDERS = True
 
 # Logging configuration
 LOGGING = {
