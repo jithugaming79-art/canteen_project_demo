@@ -18,8 +18,6 @@ if RENDER_EXTERNAL_HOSTNAME:
 
 INSTALLED_APPS = [
     'jazzmin',
-    'daphne',
-    'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -43,6 +41,11 @@ INSTALLED_APPS = [
     'chatbot',
     'axes',
 ]
+
+# Add daphne/channels only for local development (not supported on Render free tier)
+if DEBUG:
+    INSTALLED_APPS.insert(1, 'daphne')
+    INSTALLED_APPS.insert(2, 'channels')
 
 SITE_ID = 1
 
@@ -78,13 +81,15 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'canteen.wsgi.application'
-ASGI_APPLICATION = 'canteen.asgi.application'
 
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer"
+# ASGI/Channels only for local development
+if DEBUG:
+    ASGI_APPLICATION = 'canteen.asgi.application'
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels.layers.InMemoryChannelLayer"
+        }
     }
-}
 
 # For production, switch to Redis (pip install channels-redis):
 # CHANNEL_LAYERS = {
@@ -194,6 +199,7 @@ AXES_FAILURE_LIMIT = 5          # Lock after 5 failed attempts
 AXES_COOLOFF_TIME = 1           # Lock for 1 hour
 AXES_RESET_ON_SUCCESS = True    # Reset counter on successful login
 AXES_LOCKOUT_PARAMETERS = ['username', 'ip_address']  # Lock by combo
+AXES_ENABLED = True             # Enable axes
 
 # Allauth settings
 ACCOUNT_LOGIN_ON_GET = True
@@ -215,15 +221,19 @@ ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 3  # Verification link valid for 3 days
 
 
 # Email Configuration
-if config('EMAIL_HOST', default=None):
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = config('EMAIL_HOST')
-    EMAIL_PORT = config('EMAIL_PORT', cast=int)
-    EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool, default=True)
-    EMAIL_HOST_USER = config('EMAIL_HOST_USER')
-    EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
-    DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='webmaster@localhost')
-else:
+try:
+    _email_host = config('EMAIL_HOST', default='')
+    if _email_host:
+        EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+        EMAIL_HOST = _email_host
+        EMAIL_PORT = config('EMAIL_PORT', cast=int, default=587)
+        EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool, default=True)
+        EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+        EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+        DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='webmaster@localhost')
+    else:
+        EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+except Exception:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Firebase API Config (for email verification via Pyrebase)
