@@ -185,11 +185,10 @@ def checkout(request):
     return render(request, 'orders/checkout.html', context)
 
 @login_required
+@transaction.atomic
 def place_order(request):
     """Create order from cart"""
-    import traceback
     import logging
-    from django.http import HttpResponse
     logger = logging.getLogger(__name__)
     
     if request.method != 'POST':
@@ -242,16 +241,13 @@ def place_order(request):
                 messages.error(request, 'Invalid scheduled time format. Please try again.')
                 return redirect('checkout')
 
-            # Make timezone aware if naive
             if timezone.is_naive(scheduled_for):
                 scheduled_for = timezone.make_aware(scheduled_for, timezone.get_current_timezone())
                 
-            # Basic validation: cannot be in past
             if scheduled_for < timezone.now():
                  messages.error(request, 'Preorder time cannot be in the past')
                  return redirect('checkout')
                  
-            # Ensure it's at least 30 mins in future
             if scheduled_for < timezone.now() + datetime.timedelta(minutes=30):
                  messages.error(request, 'Please schedule at least 30 minutes in advance')
                  return redirect('checkout')
@@ -265,7 +261,6 @@ def place_order(request):
             except MenuItem.DoesNotExist:
                 pass
         
-        # Total with delivery fee
         total = subtotal + delivery_fee
         
         # Create order
@@ -298,7 +293,7 @@ def place_order(request):
         request.session['cart'] = {}
         request.session.modified = True
         
-        # Send confirmation email (best-effort, don't crash order)
+        # Send confirmation email (best-effort)
         try:
             from .utils import send_order_confirmation_email
             send_order_confirmation_email(order)
@@ -312,15 +307,9 @@ def place_order(request):
             return redirect('payment_page', order_id=order.id)
     
     except Exception as e:
-        tb = traceback.format_exc()
-        logger.error(f"PLACE ORDER ERROR: {e}\n{tb}")
-        return HttpResponse(
-            f"<h1>Order Error (DEBUG)</h1>"
-            f"<pre>{tb}</pre>"
-            f"<p>POST data: {dict(request.POST)}</p>"
-            f"<p>Cart: {get_cart(request)}</p>",
-            status=500
-        )
+        logger.error(f"PLACE ORDER ERROR: {e}", exc_info=True)
+        messages.error(request, 'Something went wrong while placing your order. Please try again.')
+        return redirect('checkout')
 
 @login_required
 def order_history(request):

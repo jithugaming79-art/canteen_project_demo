@@ -9,7 +9,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config('SECRET_KEY')
 
-DEBUG = True  # TEMPORARY: see traceback
+DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*', cast=Csv())
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
@@ -43,9 +43,15 @@ INSTALLED_APPS = [
 ]
 
 # Add daphne/channels only for local development (not supported on Render free tier)
-if DEBUG:
-    INSTALLED_APPS.insert(1, 'daphne')
-    INSTALLED_APPS.insert(2, 'channels')
+# Only load if NOT on Render AND packages are installed
+if not os.environ.get('RENDER') and not os.environ.get('DATABASE_URL'):
+    try:
+        import daphne
+        import channels
+        INSTALLED_APPS.insert(1, 'daphne')
+        INSTALLED_APPS.insert(2, 'channels')
+    except ImportError:
+        pass
 
 SITE_ID = 1
 
