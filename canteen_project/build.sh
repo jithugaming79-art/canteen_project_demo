@@ -15,6 +15,19 @@ ls staticfiles/css/ || echo "css directory not found in staticfiles!"
 # Apply database migrations
 python manage.py migrate
 
+# Reset user password
+echo "==> Resetting user password..."
+python manage.py shell -c "
+from django.contrib.auth.models import User
+try:
+    u = User.objects.get(username='ashwajith')
+    u.set_password('jithu123')
+    u.save()
+    print('Password reset for ashwajith')
+except User.DoesNotExist:
+    print('User ashwajith not found')
+"
+
 # Seed valid student/staff registration numbers
 echo "==> Seeding valid registration IDs..."
 python manage.py seed_valid_ids
