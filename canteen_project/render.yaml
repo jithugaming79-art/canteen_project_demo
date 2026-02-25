@@ -10,7 +10,7 @@ services:
     plan: free
     runtime: python
     buildCommand: "./build.sh"
-    startCommand: "gunicorn canteen.wsgi:application"
+    startCommand: "gunicorn canteen.wsgi:application --timeout 120 --workers 2"
     envVars:
       - key: DATABASE_URL
         fromDatabase:
