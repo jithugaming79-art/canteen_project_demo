@@ -335,6 +335,9 @@ SESSION_SAVE_EVERY_REQUEST = True  # Extend session on activity (like Swiggy)
 # CSRF security
 CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_TRUSTED_ORIGINS = [
+    'https://canteen-project-demo.onrender.com',
+]
 
 # Production settings (applied if DEBUG=False)
 if not DEBUG:
