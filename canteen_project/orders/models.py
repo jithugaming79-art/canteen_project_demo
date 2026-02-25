@@ -48,6 +48,7 @@ class Order(models.Model):
         ('cash', 'Cash'),
         ('upi', 'UPI'),
         ('wallet', 'Wallet'),
+        ('online', 'Online Payment'),
     ]
     
     DELIVERY_TYPE_CHOICES = [

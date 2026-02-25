@@ -293,9 +293,13 @@ def place_order(request):
     request.session['cart'] = {}
     request.session.modified = True
     
-    # Send confirmation email
-    from .utils import send_order_confirmation_email
-    send_order_confirmation_email(order)
+    # Send confirmation email (best-effort, don't crash order)
+    try:
+        from .utils import send_order_confirmation_email
+        send_order_confirmation_email(order)
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"Failed to send order email: {e}")
     
     # Messages deferred until payment completion
     
