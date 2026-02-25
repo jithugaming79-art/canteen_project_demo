@@ -171,7 +171,17 @@ LOGGING = {
         },
         'django.request': {
             'handlers': ['console'],
-            'level': 'ERROR',
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'accounts': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'axes': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
             'propagate': False,
         },
         'orders': {'level': 'INFO'},
@@ -200,6 +210,7 @@ AXES_COOLOFF_TIME = 1           # Lock for 1 hour
 AXES_RESET_ON_SUCCESS = True    # Reset counter on successful login
 AXES_LOCKOUT_PARAMETERS = ['username', 'ip_address']  # Lock by combo
 AXES_ENABLED = True             # Enable axes
+AXES_HANDLER = 'axes.handlers.database.AxesDatabaseHandler'  # Explicit DB handler for production
 
 # Allauth settings
 ACCOUNT_LOGIN_ON_GET = True

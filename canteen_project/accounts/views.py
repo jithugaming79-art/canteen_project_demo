@@ -338,9 +338,11 @@ def resend_email_otp_view(request):
 
 def login_view(request):
     from django.core.exceptions import PermissionDenied
+    logger = logging.getLogger(__name__)
+    
     if request.method == 'POST':
-        username = request.POST.get('username')
-        if len(username) > 30: # Limit length
+        username = request.POST.get('username', '').strip()
+        if not username or len(username) > 30:  # Limit length
             messages.error(request, 'Invalid credentials')
             return render(request, 'accounts/login.html')
             
@@ -351,22 +353,30 @@ def login_view(request):
         except PermissionDenied:
             messages.error(request, 'Too many failed attempts. Please try again in an hour.')
             return render(request, 'accounts/login.html')
+        except Exception as e:
+            logger.error(f"Authentication error for user '{username}': {e}", exc_info=True)
+            messages.error(request, 'Login service temporarily unavailable. Please try again.')
+            return render(request, 'accounts/login.html')
         
         if user is not None:
             # Email verification check
-            email_address = EmailAddress.objects.filter(user=user, email=user.email).first()
-            if email_address and not email_address.verified:
-                # Send a new OTP and redirect to verification page
-                from .email_otp import generate_otp, store_otp, send_otp_email, mark_resend, can_resend
-                if can_resend(user.email):
-                    otp = generate_otp()
-                    store_otp(user.email, otp)
-                    mark_resend(user.email)
-                    send_otp_email(user.email, otp)
-                
-                request.session['verify_email'] = user.email
-                messages.error(request, 'Please verify your email first. A new code has been sent.')
-                return redirect('verify_email_otp')
+            try:
+                email_address = EmailAddress.objects.filter(user=user, email=user.email).first()
+                if email_address and not email_address.verified:
+                    # Send a new OTP and redirect to verification page
+                    from .email_otp import generate_otp, store_otp, send_otp_email, mark_resend, can_resend
+                    if can_resend(user.email):
+                        otp = generate_otp()
+                        store_otp(user.email, otp)
+                        mark_resend(user.email)
+                        send_otp_email(user.email, otp)
+                    
+                    request.session['verify_email'] = user.email
+                    messages.error(request, 'Please verify your email first. A new code has been sent.')
+                    return redirect('verify_email_otp')
+            except Exception as e:
+                logger.error(f"Email verification check error: {e}", exc_info=True)
+                # Continue with login even if email check fails
             
             login(request, user)
             
