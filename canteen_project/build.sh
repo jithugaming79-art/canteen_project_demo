@@ -19,4 +19,6 @@ python manage.py migrate
 if [ -n "$DJANGO_SUPERUSER_USERNAME" ]; then
     echo "==> Creating superuser..."
     python manage.py createsuperuser --noinput || echo "Superuser already exists or creation failed"
+    echo "==> Setting superuser role to admin..."
+    python manage.py setup_admin
 fi
